@@ -1,0 +1,2 @@
+Parsing idea:
+	Everytime I find an opening bracket, get the index of the closing bracket and pass the indexes to the Server/Location class constructor (Location class will be called inside the Server class constructor), and parse it internally using the constructor and member functions.
