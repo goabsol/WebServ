@@ -17,6 +17,28 @@ std::string replace_white_spaces(std::string const & str)
 	return new_str;
 }
 
+int findStart(std::vector<std::string> &lines)
+{
+	int i = 0;
+	while ((i < lines.size()) && (lines[i] != "server:"))
+	{
+		i++;
+	}
+	if (i >= lines.size())
+	{
+		std::cerr << "Error : no servers in config file" << std::endl;
+		exit(1);
+	}
+	return i;
+}
+
+void parse_conf(std::vector<std::string> &lines)
+{
+	int start_of_servers = 0;
+	start_of_servers = findStart(lines);
+	Conf config = Conf(lines, start_of_servers);
+	std::cout << config.index << std::endl;
+}
 
 int main(int argc, char **argv, char **env)
 {
@@ -30,10 +52,10 @@ int main(int argc, char **argv, char **env)
 	indata.open(argv[1]);
 	if (!indata)
 	{
-		std::cerr << "Error: File could not be opened." << std::endl;
+		std::cerr << "Error: Could not open configuration file." << std::endl;
 		return (1);
 	}
-	std::string lines;
+	std::vector<std::string> lines;
 	while (getline(indata, line))
 	{
 		size_t ind;
@@ -44,9 +66,9 @@ int main(int argc, char **argv, char **env)
 			line.erase(0, 1);
 		if (line != "")
 		{
-			lines += " " + line;
+			lines.push_back(line);
+			// std::cout << line << std::endl;
 		}
 	}
-		lines.erase(0,1);
-		std::cout << lines << std::endl;
+	parse_conf(lines);
 }
