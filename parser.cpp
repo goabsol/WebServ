@@ -35,9 +35,19 @@ int findStart(std::vector<std::string> &lines)
 void parse_conf(std::vector<std::string> &lines)
 {
 	int start_of_servers = 0;
+	std::vector<Server> servers;
 	start_of_servers = findStart(lines);
-	Conf config = Conf(lines, start_of_servers);
-	std::cout << config.index << std::endl;
+	Conf global_config = Conf(lines, start_of_servers);
+	std::map<std::string, std::string>::iterator it;
+	// for (it = global_config.error_pages.begin(); it != global_config.error_pages.end(); it++)
+	// {
+	// 	std::cout << it->first << " " << it->second << std::endl;
+	// }
+	// std::cout << "root: " << global_config.root << std::endl;
+	// for (int i = 0; i < global_config.allowed_methods.size(); i++)
+	// {
+	// 	std::cout << global_config.allowed_methods[i] << '\n';
+	// }
 }
 
 int main(int argc, char **argv, char **env)
