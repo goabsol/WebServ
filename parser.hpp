@@ -140,7 +140,20 @@ class Conf
 			{
 				if (this->body_size_limit == -1)
 				{
-					this->body_size_limit = stoi(value);
+					if (!string_is_digit(value))
+					{
+						std::cerr << "Error: body_size_limit is not valid" << std::endl;
+						exit(1);
+					}
+					try{
+
+						this->body_size_limit = stoi(value);
+					}
+					catch(...)
+					{
+						std::cerr << "invalid body size" << std::endl;
+						exit(1);
+					}
 					if (this->body_size_limit < 0)
 					{
 						std::cerr << "Error: body_size_limit is invalid" << std::endl;
