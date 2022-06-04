@@ -48,6 +48,10 @@ void parse_conf(std::vector<std::string> &lines)
 	// {
 	// 	std::cout << global_config.allowed_methods[i] << '\n';
 	// }
+	// for(int i = 0; i < global_config.index.size(); i++)
+	// {
+	// 	std::cout << global_config.index[i] << '\n';
+	// }
 }
 
 int main(int argc, char **argv, char **env)
