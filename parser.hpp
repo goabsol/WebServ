@@ -39,7 +39,7 @@ class Conf
 		std::vector<std::string> allowed_methods;
 		std::vector<std::string> index;
 		std::map<std::string, std::string> error_pages;
-		std::string body_size_limit;
+		int body_size_limit;
 		std::vector<std::string> split_white_space(std::string &line)
 		{
 			std::vector<std::string> words;
@@ -138,8 +138,15 @@ class Conf
 			}
 			else if (token == "body_size_limit")
 			{
-				if (this->body_size_limit == "")
-					this->body_size_limit = value;
+				if (this->body_size_limit == -1)
+				{
+					this->body_size_limit = stoi(value);
+					if (this->body_size_limit < 0)
+					{
+						std::cerr << "Error: body_size_limit is invalid" << std::endl;
+						exit(1);
+					}
+				}
 				else
 				{
 					std::cout << "Error: body_size_limit is specified more than once" << std::endl;
@@ -176,7 +183,7 @@ class Conf
 		Conf(std::vector<std::string> &lines, int startOfServer)
 		{
 			this->root = "";
-			this->body_size_limit = "";
+			this->body_size_limit = -1;
 			int i = 0;
 			while (i < startOfServer)
 			{
