@@ -71,9 +71,14 @@ void parse_conf(std::vector<std::string> &lines)
 	while(end_of_server < lines.size())
 	{
 		end_of_server = (find_end_of_server(lines, start_of_servers + 1));
-		Server server = Server(lines, start_of_servers + 1, end_of_server);
+		Server server = Server(lines, start_of_servers + 1, end_of_server, global_config);
 		servers.push_back(server);
 		start_of_servers = end_of_server;
+	}
+	std::map<std::string, std::string>::iterator it;
+	for (it = servers[0].error_pages.begin(); it != servers[0].error_pages.end(); it++)
+	{
+		std::cout << it->first << " " << it->second << std::endl;
 	}
 }
 
