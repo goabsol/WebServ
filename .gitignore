@@ -3,3 +3,4 @@ a.out
 .DS_Store
 .gitignore
 test_parsing.conf
+a.out.dSYM
