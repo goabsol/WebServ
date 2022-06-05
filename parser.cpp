@@ -20,7 +20,7 @@ std::string replace_white_spaces(std::string const & str)
 int findStart(std::vector<std::string> &lines)
 {
 	int i = 0;
-	while ((i < lines.size()) && (lines[i] != "server:"))
+	while ((i < lines.size()) && (lines[i] != "server"))
 	{
 		i++;
 	}
@@ -32,13 +32,28 @@ int findStart(std::vector<std::string> &lines)
 	return i;
 }
 
+int find_end_of_server(std::vector<std::string> &lines, int start)
+{
+	int i = start;
+	while(i < lines.size() && lines[i] != "server")
+	{
+		i++;
+	}
+	if (i == start)
+	{
+		std::cerr << "Error : invalid server bock" << std::endl;
+		exit(1);
+	}
+	return (i);
+}
+
 void parse_conf(std::vector<std::string> &lines)
 {
 	int start_of_servers = 0;
 	std::vector<Server> servers;
 	start_of_servers = findStart(lines);
 	Conf global_config = Conf(lines, start_of_servers);
-	std::map<std::string, std::string>::iterator it;
+	// std::map<std::string, std::string>::iterator it;
 	// for (it = global_config.error_pages.begin(); it != global_config.error_pages.end(); it++)
 	// {
 	// 	std::cout << it->first << " " << it->second << std::endl;
@@ -52,11 +67,21 @@ void parse_conf(std::vector<std::string> &lines)
 	// {
 	// 	std::cout << global_config.index[i] << '\n';
 	// }
+	int end_of_server = 0;
+	while(end_of_server < lines.size())
+	{
+		end_of_server = (find_end_of_server(lines, start_of_servers + 1));
+		Server server = Server(lines, start_of_servers + 1, end_of_server);
+		servers.push_back(server);
+		start_of_servers = end_of_server;
+	}
 }
 
 int main(int argc, char **argv, char **env)
 {
 	std::ifstream indata;
+	std::ofstream outdata;
+	outdata.open("test_parsing.conf");
 	std::string line;
 	if (argc != 2)
 	{
@@ -81,7 +106,7 @@ int main(int argc, char **argv, char **env)
 		if (line != "")
 		{
 			lines.push_back(line);
-			// std::cout << line << std::endl;
+			outdata << line << std::endl;
 		}
 	}
 	parse_conf(lines);
