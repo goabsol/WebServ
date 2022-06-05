@@ -75,11 +75,6 @@ void parse_conf(std::vector<std::string> &lines)
 		servers.push_back(server);
 		start_of_servers = end_of_server;
 	}
-	std::map<std::string, std::string>::iterator it;
-	for (it = servers[0].error_pages.begin(); it != servers[0].error_pages.end(); it++)
-	{
-		std::cout << it->first << " " << it->second << std::endl;
-	}
 }
 
 int main(int argc, char **argv, char **env)

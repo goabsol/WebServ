@@ -36,6 +36,31 @@ std::vector<std::string> split_white_space(std::string &line)
 	return words;
 }
 
+int location_start(std::vector<std::string> &lines, int start)
+{
+	int i = start;
+	while(i < lines.size() && lines[i] != "location" && lines[i] != "server")
+	{
+		i++;
+	}
+	return i;
+}
+
+int find_end_of_location(std::vector<std::string> &lines, int start)
+{
+	int i = start;
+	while(i < lines.size() && lines[i] != "location" && lines[i] != "server")
+	{
+		i++;
+	}
+	if (i == start)
+	{
+		std::cerr << "Error : invalid location bock" << std::endl;
+		exit(1);
+	}
+	return (i);
+}
+
 bool string_is_digit(std::string str)
 {
 	for (int i = 0; i < str.length(); i++)
@@ -382,11 +407,24 @@ class Server
 			error_pages = global_config.error_pages;
 			int i = start;
 			// make "end" stop at locations to parse them separatly
+			end = location_start(lines, start);
 			while(i < end)
 			{
 				specifyToken(lines[i]);
 				i++;
 			}
+			int end_of_location = end;
+			/* THIS SHALL BE DONE TOMORROW INSHALLAH INSHALLAH */
+			// if(lines[end] == "location")
+			// {
+			// 	while(end_of_location < lines.size() && lines[end_of_location] != "server")
+			// 	{
+			// 		end_of_location = location_start(lines, end + 1);
+			// 		Location locations = Location(lines, end + 1, end_of_location, *this);
+			// 		locations[locations.get_key] = locations;
+			// 		end = end_of_location;
+			// 	}
+			// }
 		}
 };
 
