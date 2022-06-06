@@ -1,113 +1,121 @@
 #include "parser.hpp"
-
-std::string replace_white_spaces(std::string const & str)
+void Conf::specifyToken(std::string line)
 {
-	std::string new_str = "";
-	for (int i = 0; i < str.length(); i++)
+
+	std::string token = line.substr(0, line.find(' '));
+	std::string value = line.substr(line.find(' ') + 1);
+	if (token == value)
 	{
-		if (!iswspace(str[i]))
+		std::cerr << "Error : " << token << " is not valid" << std::endl;
+		exit(1);
+	}
+	if (token == "root")
+	{
+		if (this->root == "")
+			this->root = value;
+		else
 		{
-			new_str += str[i];
-		}
-		else if (iswspace(str[i]) && new_str.back() != ' ')
-		{
-			new_str += ' ';
+			std::cout << "Error: root is specified more than once" << std::endl;
+			exit(1);
 		}
 	}
-	return new_str;
-}
+	else if (token == "index")
+	{
+		if (this->index.size() == 0)
+		{
+			this->index = split_white_space(value);
+		}
+		else
+		{
+			std::cout << "Error: index is specified more than once" << std::endl;
+			exit(1);
+		}
+	}
+	else if (token == "error_page")
+	{
+		std::string error_code = value.substr(0, value.find(' '));
+		if (!string_is_digit(error_code))
+		{
+			std::cerr << "Error: error code invalid" << std::endl;
+			exit(1);
+		}
+		std::string error_page = value.substr(value.find(' ') + 1);
+		if (this->error_pages.find(error_code) == this->error_pages.end())
+			this->error_pages[error_code] = error_page;
+		else
+		{
+			std::cout << "Error: error_page is specified more than once" << std::endl;
+			exit(1);
+		}
+	}
+	else if (token == "body_size_limit")
+	{
+		if (this->body_size_limit == -1)
+		{
+			if (!string_is_digit(value))
+			{
+				std::cerr << "Error: body_size_limit is not valid" << std::endl;
+				exit(1);
+			}
+			try
+			{
 
-int findStart(std::vector<std::string> &lines)
+				this->body_size_limit = stoi(value);
+			}
+			catch (...)
+			{
+				std::cerr << "invalid body size" << std::endl;
+				exit(1);
+			}
+			if (this->body_size_limit < 0)
+			{
+				std::cerr << "Error: body_size_limit is invalid" << std::endl;
+				exit(1);
+			}
+		}
+		else
+		{
+			std::cout << "Error: body_size_limit is specified more than once" << std::endl;
+			exit(1);
+		}
+	}
+	else if (token == "allowed_methods")
+	{
+		std::vector<std::string> tmp;
+
+		if (this->allowed_methods.size() == 0)
+		{
+			tmp = split_white_space(value);
+			for (int i = 0; i < tmp.size(); i++)
+			{
+				if (!validMethod(tmp[i]) || find(this->allowed_methods.begin(), this->allowed_methods.end(), tmp[i]) != this->allowed_methods.end())
+				{
+					std::cerr << "Error: " << tmp[i] << " allowed method is not valid or duplicated" << std::endl;
+					exit(1);
+				}
+				this->allowed_methods.push_back(tmp[i]);
+			}
+		}
+		else
+		{
+			std::cout << "Error: allowed_methods is specified more than once" << std::endl;
+			exit(1);
+		}
+	}
+	else
+	{
+		std::cout << "Error : unknown token : " << token << std::endl;
+		exit(1);
+	}
+}
+Conf::Conf(std::vector<std::string> &lines, int startOfServer)
 {
+	this->root = "";
+	this->body_size_limit = -1;
 	int i = 0;
-	while ((i < lines.size()) && (lines[i] != "server"))
+	while (i < startOfServer)
 	{
+		specifyToken(lines[i]);
 		i++;
 	}
-	if (i >= lines.size())
-	{
-		std::cerr << "Error : no servers in config file" << std::endl;
-		exit(1);
-	}
-	return i;
-}
-
-int find_end_of_server(std::vector<std::string> &lines, int start)
-{
-	int i = start;
-	while(i < lines.size() && lines[i] != "server")
-	{
-		i++;
-	}
-	if (i == start)
-	{
-		std::cerr << "Error : invalid server bock" << std::endl;
-		exit(1);
-	}
-	return (i);
-}
-
-void parse_conf(std::vector<std::string> &lines)
-{
-	int start_of_servers = 0;
-	std::vector<Server> servers;
-	start_of_servers = findStart(lines);
-	Conf global_config = Conf(lines, start_of_servers);
-	// std::map<std::string, std::string>::iterator it;
-	// for (it = global_config.error_pages.begin(); it != global_config.error_pages.end(); it++)
-	// {
-	// 	std::cout << it->first << " " << it->second << std::endl;
-	// }
-	// std::cout << "root: " << global_config.root << std::endl;
-	// for (int i = 0; i < global_config.allowed_methods.size(); i++)
-	// {
-	// 	std::cout << global_config.allowed_methods[i] << '\n';
-	// }
-	// for(int i = 0; i < global_config.index.size(); i++)
-	// {
-	// 	std::cout << global_config.index[i] << '\n';
-	// }
-	int end_of_server = 0;
-	while(end_of_server < lines.size())
-	{
-		end_of_server = (find_end_of_server(lines, start_of_servers + 1));
-		Server server = Server(lines, start_of_servers + 1, end_of_server, global_config);
-		servers.push_back(server);
-		start_of_servers = end_of_server;
-	}
-}
-
-int main(int argc, char **argv, char **env)
-{
-	std::ifstream indata;
-	std::ofstream outdata;
-	outdata.open("test_parsing.conf");
-	std::string line;
-	if (argc != 2)
-	{
-		std::cerr << "Usage : ./webserv <config_file>" << std::endl;
-		return (1);
-	}
-	indata.open(argv[1]);
-	if (!indata)
-	{
-		std::cerr << "Error: Could not open configuration file." << std::endl;
-		return (1);
-	}
-	std::vector<std::string> lines;
-	while (getline(indata, line))
-	{
-		size_t ind;
-		if ((ind = line.find('#')) != std::string::npos)
-			line.erase(ind);
-		line = replace_white_spaces(line);
-		if (line[0] == ' ')
-			line.erase(0, 1);
-		if (line != "")
-		{
-			lines.push_back(line);
-			outdata << line << std::endl;
-		}
-	}
-	parse_conf(lines);
 }
