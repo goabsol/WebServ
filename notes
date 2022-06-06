@@ -1,2 +1,1 @@
-Parsing idea:
-	Going for simpler parsing, sorry :D
+Next is making a function for every directive to handle errors better.
