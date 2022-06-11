@@ -104,42 +104,31 @@ void Server::specifyToken(std::string &line)
 	}
 	else if (token == "allowed_methods")
 	{
-		std::vector<std::string> tmp;
-		tmp = split_white_space(value);
-		for (int i = 0; i < tmp.size(); i++)
+		if(allowed_methods_set)
 		{
-			if (!validMethod(tmp[i]) || (find(this->tmp_allowed_methods.begin(), this->tmp_allowed_methods.end(), tmp[i]) != this->tmp_allowed_methods.end()))
-			{
-				std::cerr << "Error: " << tmp[i] << " allowed method is not valid or duplicated" << std::endl;
-				exit(1);
-			}
-			this->tmp_allowed_methods.push_back(tmp[i]);
+			std::cerr << "Allowed methods specified more than once.\n";
+			exit(1);
 		}
-		for (int i = 0; i < this->tmp_allowed_methods.size(); i++)
-		{
-			if (find(this->allowed_methods.begin(), this->allowed_methods.end(), this->tmp_allowed_methods[i]) == this->allowed_methods.end())
-			{
-				this->allowed_methods.push_back(this->tmp_allowed_methods[i]);
-			}
-		}
+		this->allowed_methods = validMethods(value);
+		allowed_methods_set = true;
 	}
 	else if (token == "error_page")
 	{
 		std::string error_code = value.substr(0, value.find(' '));
-		if (!string_is_digit(error_code))
+		if (!string_is_digit(error_code)&& stoi(error_code) >= 300 && stoi(error_code) <= 599)
 		{
 			std::cerr << "Error: error code invalid" << std::endl;
 			exit(1);
 		}
 		std::string error_page = value.substr(value.find(' ') + 1);
-		if (find(new_error_pages.begin(), new_error_pages.end(), error_code) == new_error_pages.end())
+		if (find(new_error_pages.begin(), new_error_pages.end(), error_code) == new_error_pages.end() )
 		{
 			this->error_pages[error_code] = error_page;
 			new_error_pages.push_back(error_code);
 		}
 		else
 		{
-			std::cout << "Error: error_page is specified more than once" << std::endl;
+			std::cerr << "Error: error_page is specified more than once" << std::endl;
 			exit(1);
 		}
 	}
@@ -149,7 +138,7 @@ void Server::specifyToken(std::string &line)
 	}
 	else
 	{
-		std::cout << "Error : unknown token : " << token << std::endl;
+		std::cerr << "Error : unknown token : " << token << std::endl;
 		exit(1);
 	}
 }
@@ -165,6 +154,7 @@ Server::Server(std::vector<std::string> &lines, int start, int end, Conf &global
 	allowed_methods = global_config.allowed_methods;
 	index = global_config.index;
 	error_pages = global_config.error_pages;
+	allowed_methods_set = false;
 	int i = start;
 	// make "end" stop at locations to parse them separatly
 	end = location_start(lines, start);

@@ -68,3 +68,20 @@ bool validMethod(std::string &method)
 	}
 	return true;
 }
+
+
+std::vector<std::string> validMethods(std::string &methods)
+{
+	std::vector<std::string> tmp = split_white_space(methods), ret;
+
+	for (int i = 0; i < tmp.size(); i++)
+	{
+		if (!validMethod(tmp[i]) || (find(ret.begin(), ret.end(), tmp[i]) != ret.end()))
+		{
+			std::cerr << "Error: " << tmp[i] << " allowed method is not valid or duplicated" << std::endl;
+			exit(1);
+		}
+		ret.push_back(tmp[i]);
+	}
+	return ret;
+}

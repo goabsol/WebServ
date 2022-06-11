@@ -10,6 +10,7 @@ class Location
 		bool root_set;
 		bool auto_index_set;
 		bool auto_index;
+		bool allowed_methods_set;
 		std::string location_value;
 		std::vector<std::string> allowed_methods;
 		std::vector<std::string> tmp_allowed_methods;

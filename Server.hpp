@@ -11,6 +11,7 @@ class Server
 		bool body_size_limit_set;
 		bool root_set;
 		bool auto_index_set;
+		bool allowed_methods_set;
 		std::vector<Location> locations;
 		std::vector<std::string> server_name;
 		std::string root;

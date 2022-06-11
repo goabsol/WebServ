@@ -5,6 +5,7 @@ Location::Location(std::vector<std::string> &lines, int start, int end, Server *
 	auto_index_set = false;
 	body_size_limit_set = false;
 	root_set = false;
+	allowed_methods_set = false;
 	auto_index = parent->auto_index;
 	body_size_limit = parent->body_size_limit;
 	root = parent->root;
@@ -100,24 +101,13 @@ void Location::splitTokens(std::string &line)
 	}
 	else if (token == "allowed_methods")
 	{
-		std::vector<std::string> tmp;
-		tmp = split_white_space(value);
-		for(int i = 0; i < tmp.size(); i++)
+		if(allowed_methods_set)
 		{
-			if (!validMethod(tmp[i]) || (find(this->tmp_allowed_methods.begin(),this->tmp_allowed_methods.end(), tmp[i]) != this->tmp_allowed_methods.end()))
-			{
-				std::cerr << "Error: " << tmp[i] << " allowed method is not valid or duplicated" << std::endl;
-				exit(1);
-			}
-			this->tmp_allowed_methods.push_back(tmp[i]);
+			std::cerr << "Allowed methods specified more than once.\n";
+			exit(1);
 		}
-		for(int i = 0; i < this->tmp_allowed_methods.size(); i++)
-		{
-			if (find(this->allowed_methods.begin(), this->allowed_methods.end(), this->tmp_allowed_methods[i]) == this->allowed_methods.end())
-			{
-				this->allowed_methods.push_back(this->tmp_allowed_methods[i]);
-			}
-		}
+		this->allowed_methods = validMethods(value);
+		allowed_methods_set = true;
 	}
 	else if(token == "cgi")
 	{

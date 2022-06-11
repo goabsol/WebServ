@@ -81,26 +81,12 @@ void Conf::specifyToken(std::string line)
 	}
 	else if (token == "allowed_methods")
 	{
-		std::vector<std::string> tmp;
-
-		if (this->allowed_methods.size() == 0)
+		if (this->allowed_methods.size() != 0)
 		{
-			tmp = split_white_space(value);
-			for (int i = 0; i < tmp.size(); i++)
-			{
-				if (!validMethod(tmp[i]) || find(this->allowed_methods.begin(), this->allowed_methods.end(), tmp[i]) != this->allowed_methods.end())
-				{
-					std::cerr << "Error: " << tmp[i] << " allowed method is not valid or duplicated" << std::endl;
-					exit(1);
-				}
-				this->allowed_methods.push_back(tmp[i]);
-			}
-		}
-		else
-		{
-			std::cout << "Error: allowed_methods is specified more than once" << std::endl;
+			std::cerr << "allowed methods set more than once.\n";
 			exit(1);
 		}
+		this->allowed_methods = validMethods(value);
 	}
 	else
 	{

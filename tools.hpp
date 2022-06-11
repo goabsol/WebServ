@@ -26,4 +26,4 @@ int find_end_of_location(std::vector<std::string> &lines, int start);
 
 bool string_is_digit(std::string str);
 
-bool validMethod(std::string &method);
+std::vector<std::string> validMethods(std::string &method);

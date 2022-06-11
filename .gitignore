@@ -4,3 +4,4 @@ a.out
 .gitignore
 test_parsing.conf
 a.out.dSYM
+nginx.conf
