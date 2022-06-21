@@ -76,7 +76,6 @@ token_T *lexer_get_token(lexer_T *lexer)
 		lexer_skip_whitespace(lexer);
 		if (lexer->i >= lexer->src_size || lexer->c == '\0')
 		{
-			std::cout << "END_OF_FILE" << std::endl;
 			return init_token("", END_OF_FILE);
 		}
 		if (isalpha(lexer->c) || lexer->c == '_')
