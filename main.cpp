@@ -7,7 +7,7 @@ void conf_parse(std::string src)
 
 	while ((tok = lexer_get_token(lexer))->type != END_OF_FILE)
 	{
-		std::cout << tok->value << " " << tok->type << std::endl;
+		std::cout << GREEN << "Token : " << RESET_COLOR << std::left <<std::setw(15) << tok->value << GREEN   << " Token type :" << RESET_COLOR << token_type_to_string(tok->type) << std::endl;
 	}
 }
 

@@ -1,5 +1,5 @@
 NAME = parser
-
+FILE = file.conf
 SRC = $(wildcard *.cpp)
 
 OBJ = $(SRC:.cpp=.o)
@@ -23,3 +23,6 @@ clean:
 re:
 	make clean
 	make
+run:
+	make
+	./$(NAME) $(FILE)

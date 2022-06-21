@@ -3,8 +3,8 @@
 #include "includes.h"
 
 #define ID 0
-#define LBRACE 1
-#define RBRACE 2
+#define LEFTBRACE 1
+#define RIGHTBRACE 2
 #define COLON 3
 #define SEMICOLON 4
 #define END_OF_FILE 5
@@ -18,3 +18,5 @@ typedef struct TOKEN_STRUCT
 } token_T;
 
 token_T *init_token(std::string, int type);
+
+std::string token_type_to_string(int type);

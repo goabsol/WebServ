@@ -92,9 +92,9 @@ token_T *lexer_get_token(lexer_T *lexer)
 		}
 		break;
 		case '{':
-			return lexer_advance_current(lexer, LBRACE);
+			return lexer_advance_current(lexer, LEFTBRACE);
 		case '}':
-			return lexer_advance_current(lexer, RBRACE);
+			return lexer_advance_current(lexer, RIGHTBRACE);
 		case ';':
 			return lexer_advance_current(lexer, SEMICOLON);
 		case '\0':break;
