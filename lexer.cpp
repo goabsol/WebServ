@@ -1,14 +1,22 @@
 #include "lexer.hpp"
 
-lexer_T *init_lexer(std::string src)
+
+lexer_T::lexer_T()
 {
-	lexer_T *lexer = new lexer_T;
-	lexer->src = src;
-	lexer->i = 0;
-	lexer->src_size = src.size();
-	lexer->c = src[lexer->i];
-	return lexer;
+	this->i = 0;
+	this->src = "";
+	this->src_size = src.size();
+	this->c = src[0];
 }
+
+lexer_T::lexer_T(std::string newsrc)
+{
+	this->i = 0;
+	this->src = newsrc;
+	this->src_size = src.size();
+	this->c = src[0];
+}
+
 
 void lexer_advance(lexer_T *lexer)
 {
@@ -19,22 +27,22 @@ void lexer_advance(lexer_T *lexer)
 	}
 }
 
-char lexer_peek(lexer_T *lexer, int i)
-{
-	return lexer->src[std::min((size_t)lexer->i + i, lexer->src_size)];
-}
+// char lexer_peek(lexer_T *lexer, int i)
+// {
+// 	return lexer->src[std::min((size_t)lexer->i + i, lexer->src_size)];
+// }
 
-token_T *lexer_advance_with(lexer_T *lexer, token_T *token)
+token_T lexer_advance_with(lexer_T *lexer, token_T token)
 {
 	lexer_advance(lexer);
 	return token;
 }
 
-token_T *lexer_advance_current(lexer_T *lexer, int type)
+token_T lexer_advance_current(lexer_T *lexer, int type)
 {
 	std::string value = "";
 	value += lexer->c;
-	token_T *token = init_token(value, type);
+	token_T token = token_T(value, type);
 	lexer_advance(lexer);
 
 	return token;
@@ -47,7 +55,7 @@ void lexer_skip_whitespace(lexer_T *lexer)
 		lexer_advance(lexer);
 	}
 }
-token_T *lexer_parse_id(lexer_T *lexer)
+token_T lexer_parse_id(lexer_T *lexer)
 {
 	std::string value;
 	while (isalpha(lexer->c) || lexer->c == '_')
@@ -55,10 +63,10 @@ token_T *lexer_parse_id(lexer_T *lexer)
 		value += lexer->c;
 		lexer_advance(lexer);
 	}
-	return init_token(value, ID);
+	return token_T(value, ID);
 }
 
-token_T *lexer_parse_number(lexer_T *lexer)
+token_T lexer_parse_number(lexer_T *lexer)
 {
 	std::string value;
 	while (isdigit(lexer->c))
@@ -66,20 +74,22 @@ token_T *lexer_parse_number(lexer_T *lexer)
 		value += lexer->c;
 		lexer_advance(lexer);
 	}
-	return init_token(value, NUMBER);
+	return token_T(value, NUMBER);
 }
 
-token_T *lexer_get_token(lexer_T *lexer)
+token_T lexer_get_token(lexer_T *lexer)
 {
 	while (lexer->c != '\0')
 	{
 		lexer_skip_whitespace(lexer);
 		if (lexer->i >= lexer->src_size || lexer->c == '\0')
 		{
-			return init_token("", END_OF_FILE);
+			return token_T("", END_OF_FILE);
 		}
 		if (isalpha(lexer->c) || lexer->c == '_')
+		{
 			return (lexer_parse_id(lexer));
+		}
 
 		if (isdigit(lexer->c))
 			return (lexer_parse_number(lexer));
@@ -88,7 +98,7 @@ token_T *lexer_get_token(lexer_T *lexer)
 		{
 		case ':':
 		{
-			return (lexer_advance_with(lexer, init_token(":", COLON)));
+			return (lexer_advance_with(lexer, token_T(":", COLON)));
 		}
 		break;
 		case '{':
@@ -102,5 +112,5 @@ token_T *lexer_get_token(lexer_T *lexer)
 		}
 	}
 
-	return init_token(0, END_OF_FILE);
+	return token_T(0, END_OF_FILE);
 }

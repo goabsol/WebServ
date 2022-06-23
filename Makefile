@@ -6,7 +6,7 @@ OBJ = $(SRC:.cpp=.o)
 
 FLAGS = -Wall -Wextra -Werror -std=c++11
 
-SANITIZE = -fsanitize=address -g
+SANITIZE = #-fsanitize=address -g
 
 $(NAME): $(OBJ)
 	g++  $(OBJ) $(FLAGS) -o$(NAME) $(SANITIZE)

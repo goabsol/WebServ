@@ -1,13 +1,18 @@
 #pragma once
 
 #include "lexer.hpp"
+#include "AST.hpp"
 
-typedef struct PARSER_STRUCT
+class parser_T
 {
-	lexer_T* lexer;
-	token_T* token;
+	public:
+		lexer_T *lexer;
+		token_T token;
+		parser_T(lexer_T *lexer);
+		parser_T();
+		token_T parser_eat(int type);
 
-} parser_T;
+		// AST_T *parser_parse(parser_T *parser);
 
-
-parser_T* init_parser(lexer_T* lexer);
+		// AST_T *parser_parse_compound(parser_T *parser);
+};

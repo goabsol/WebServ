@@ -11,12 +11,14 @@
 #define NUMBER 6
 
 
-typedef struct TOKEN_STRUCT
+class  token_T
 {
-	std::string value;
-	int type;
-} token_T;
+	public:
+		std::string value;
+		int type;
+		token_T(std::string, int type);
+		token_T();
+};
 
-token_T *init_token(std::string, int type);
 
 std::string token_type_to_string(int type);
