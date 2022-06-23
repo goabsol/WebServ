@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include "./request/request.cpp"
 
 #define SOCKET int
 typedef struct parsed_servers{
@@ -116,18 +117,18 @@ int main()
 					i = client_fd;
 				}
 				std::cout << "Data received" << std::endl;
-				char buffer[1024];
-				memset(buffer, 0, 1024);
-				int bytes_read = recv(i, buffer, 1024, 0);
-				if (bytes_read <= 0)
+				////////////////////////////////////////////////////////////////////
+				RequestHeader request = parse_request(i);
+				////////////////////////////////////////////////////////////////////
+				if (request.getHasError())
 				{
-					std::cout << (bytes_read < 0?"Error reading data ":"") << "Connection closed" << std::endl;
+					std::cout << request.getError() << std::endl;
 					FD_CLR(i, &read_fd);
 					close(i);
 				}
 				else
 				{
-					std::cout << "Data: " << buffer << std::endl;
+					std::cout << "Data: " << request.getData() << std::endl;
 					FD_CLR(i, &read_fd);
 					FD_SET(i, &write_fd);
 				}
