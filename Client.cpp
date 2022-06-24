@@ -1,14 +1,18 @@
-#include "RequestHeader.hpp"
+#include "Client.hpp"
 
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 
-RequestHeader::RequestHeader()
+Client::Client(): socket(0), request(std::string())
 {
 }
 
-RequestHeader::RequestHeader( const RequestHeader & src )
+Client::Client(int socket): socket(socket), request(std::string())
+{
+}
+
+Client::Client( const Client & src )
 {
 }
 
@@ -17,7 +21,7 @@ RequestHeader::RequestHeader( const RequestHeader & src )
 ** -------------------------------- DESTRUCTOR --------------------------------
 */
 
-RequestHeader::~RequestHeader()
+Client::~Client()
 {
 }
 
@@ -26,7 +30,7 @@ RequestHeader::~RequestHeader()
 ** --------------------------------- OVERLOAD ---------------------------------
 */
 
-RequestHeader &				RequestHeader::operator=( RequestHeader const & rhs )
+Client &				Client::operator=( Client const & rhs )
 {
 	//if ( this != &rhs )
 	//{
@@ -35,7 +39,7 @@ RequestHeader &				RequestHeader::operator=( RequestHeader const & rhs )
 	return *this;
 }
 
-std::ostream &			operator<<( std::ostream & o, RequestHeader const & i )
+std::ostream &			operator<<( std::ostream & o, Client const & i )
 {
 	//o << "Value = " << i.getValue();
 	return o;
@@ -50,23 +54,23 @@ std::ostream &			operator<<( std::ostream & o, RequestHeader const & i )
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
 */
+int Client::getSocket()
+{
+	return socket;
+}
 
-		bool RequestHeader::getHasError()
-		{
-			return hasError;
-		}
-		std::string RequestHeader::getError()
-		{
-			return errorMessage;
-		}
-		std::string RequestHeader::getData()
-		{
-			return data;
-		}
+void Client::setSocket(int s)
+{
+	socket = s;
+}
+////////////////////////////
+std::string Client::getRequest()
+{
+	return request;
+}
 
-		void RequestHeader::setData(std::string line)
-		{
-			data += line;
-		}
-
+void Client::setRequest(std::string req)
+{
+	request = req;
+}
 /* ************************************************************************** */

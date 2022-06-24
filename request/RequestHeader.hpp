@@ -15,6 +15,7 @@ class RequestHeader
 		bool getHasError();
 		std::string getError();
 		std::string getData();
+		void setData(std::string line);
 		RequestHeader &		operator=( RequestHeader const & rhs );
 
 	private:
@@ -23,8 +24,10 @@ class RequestHeader
 		std::string httpVersion;
 		std::map<std::string, std::string> requestFields;
 		std::string body;
+		std::string data;
 		bool hasError;
 		std::string errorMessage;
+		bool isDone;
 };
 
 std::ostream &			operator<<( std::ostream & o, RequestHeader const & i );
