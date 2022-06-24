@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include "./request/request.hpp"
 
 #define SOCKET int
 typedef struct parsed_servers{
@@ -90,6 +91,7 @@ int main()
 	fd_set master = read_fd;
 	fd_set write_fd;
 	FD_ZERO(&write_fd);
+	std::map<SOCKET,Client>clients;
 	while (1)
 	{
 		//making copies of read_fd and write_fd to avoid modifying the original with select
@@ -125,19 +127,23 @@ int main()
 					m_socket_to_server[client_fd] = m_socket_to_server[i];
 					i = client_fd;
 				}
+				if (clients.find(i) == clients.end())
+					clients[i] = Client(i);
 				std::cout << "Data received" << std::endl;
-				char buffer[1024];
-				memeset(buffer, 0, 1024);
-				int bytes_read = recv(i, buffer, 1024, 0); //if conection is closed by client or error occured in recv
-				if (bytes_read <= 0)
+				////////////////////////////////////////////////////////////////////
+				RequestHeader req = parse_request(clients[i]);
+				clients[i].setRequest(req.getData());
+				////////////////////////////////////////////////////////////////////
+				if (req.getHasError())
 				{
-					std::cout << (bytes_read < 0?"Error reading data ":"") << "Connection closed" << std::endl;
+					std::cout << req.getError() << std::endl;
 					FD_CLR(i, &read_fd);
 					close(i);
+					clients.erase(i);
 				}
-				else //if request is received, remove socket from read_fd and add to write_fd
+				else if (req.getIsDone())
 				{
-					std::cout << "Data: " << buffer << std::endl;
+					std::cout << "Data: " << req.getData() << std::endl;
 					FD_CLR(i, &read_fd);
 					FD_SET(i, &write_fd);
 				}

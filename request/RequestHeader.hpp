@@ -13,6 +13,7 @@ class RequestHeader
 		RequestHeader( RequestHeader const & src );
 		~RequestHeader();
 		bool getHasError();
+		bool getIsDone();
 		std::string getError();
 		std::string getData();
 		void setData(std::string line);

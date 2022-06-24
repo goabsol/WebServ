@@ -6,10 +6,12 @@
 
 Client::Client(): socket(0), request(std::string())
 {
+	requestIsDone = false;
 }
 
 Client::Client(int socket): socket(socket), request(std::string())
 {
+	requestIsDone = false;
 }
 
 Client::Client( const Client & src )

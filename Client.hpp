@@ -1,8 +1,19 @@
-#ifndef CLIENT_HPP
-# define CLIENT_HPP
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Client.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/06/24 10:56:08 by arhallab          #+#    #+#             */
+/*   Updated: 2022/06/24 11:37:34 by arhallab         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
-# include <iostream>
-# include <string>
+#pragma once
+#include <iostream>
+#include <string>
+
 
 class Client
 {
@@ -18,6 +29,7 @@ class Client
 		void setSocket(int socket);
 		void setRequest(std::string request);
 		Client &		operator=( Client const & rhs );
+		bool requestIsDone;
 
 	private:
 		int socket;
@@ -26,4 +38,4 @@ class Client
 
 std::ostream &			operator<<( std::ostream & o, Client const & i );
 
-#endif /* ********************************************************** CLIENT_H */
+/* ********************************************************** CLIENT_H */

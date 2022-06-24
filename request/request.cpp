@@ -1,4 +1,17 @@
-#include "RequestHeader.cpp"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   request.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/06/24 10:55:23 by arhallab          #+#    #+#             */
+/*   Updated: 2022/06/24 11:50:15 by arhallab         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#pragma once
+#include "request.hpp"
 
 RequestHeader parse_request(Client client)
 {
@@ -8,15 +21,13 @@ RequestHeader parse_request(Client client)
     int bytes_read;
     std::string rest = "";
     std::vector<std::string> lines;
-    bytes_read = recv(client.socket, buffer, 1024, 0);
-    client.buffer += buffer;
-    if (client.buffer.find("\r\n\r\n") == std::string::npos)
+    bytes_read = recv(client.getSocket(), buffer, 1024, 0);
+    client.setRequest(client.getRequest() + buffer);
+    if (client.getRequest().find("\r\n\r\n") != std::string::npos)
     {
-        
-        return really_parse_request(client.buffer);
+		client.requestIsDone = true;
+        return really_parse_request(client.getRequest());
     }
-    else
-        return ;
 	//while((bytes_read = recv(socket, buffer, 1024, 0)) > 0)
     //{
     //    std::string text = rest + buffer;
@@ -44,4 +55,9 @@ RequestHeader parse_request(Client client)
     // then fill the body
     // all error management 
     return ret;
+}
+
+RequestHeader really_parse_request(std::string req)
+{
+	
 }
