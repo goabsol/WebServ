@@ -34,3 +34,5 @@ token_T lexer_parse_id(lexer_T *lexer);
 token_T lexer_advance_with(lexer_T *lexer, token_T token);
 
 token_T lexer_advance_current(lexer_T *lexer, int type);
+
+void	print_and_exit(const std::string &msg, size_t line);

@@ -2,7 +2,6 @@
 #include "parser.hpp"
 
 
-
 void fancy_print(std::string &value, int type)
 {
 	std::cout << GREEN << "value: |" << RESET_COLOR << std::left << std::setw(30)<< value << GREEN  <<"| type: |" << RESET_COLOR << token_type_to_string(type) << std::endl;
@@ -16,9 +15,16 @@ void conf_parse(lexer_T *lexer)
 	{
 		tokens.push_back(tok);
 	}
-	for(size_t i = 0; i < tokens.size(); i++)
+	parser_T parser = parser_T(tokens);
+	std::cout << "error pages: " << std::endl;
+	for (auto &i : parser.error_pages)
 	{
-		fancy_print(tokens[i].value, tokens[i].type);
+		std::cout << i.first << " " << i.second << std::endl;
+	}
+	std::cout << "allowed methods: " << std::endl;
+	for (auto &i : parser.allowed_methods)
+	{
+		std::cout << i << std::endl;
 	}
 }
 

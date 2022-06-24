@@ -1,10 +1,5 @@
 #include "lexer.hpp"
 
-void	print_and_exit(const std::string &msg, size_t line)
-{
-	std::cerr << "Error: " << msg << " at line " << line << std::endl;
-	exit(1);
-}
 
 lexer_T::lexer_T()
 {
@@ -53,7 +48,7 @@ token_T lexer_advance_current(lexer_T *lexer, int type)
 {
 	std::string value = "";
 	value += lexer->c;
-	token_T token = token_T(value, type);
+	token_T token = token_T(value, type, lexer->line);
 	lexer_advance(lexer);
 
 	return token;
@@ -105,12 +100,12 @@ token_T lexer_parse_id(lexer_T *lexer)
 	if (lexer->last_type == ID || lexer->last_type == VALUE)
 	{
 		lexer->last_type = VALUE;
-		return token_T(value, VALUE);
+		return token_T(value, VALUE, lexer->line);
 	}
 	if (lexer->last_type == LOCATION)
 	{
 		lexer->last_type = LOCATION_MATCH;
-		return token_T(value, LOCATION_MATCH);
+		return token_T(value, LOCATION_MATCH, lexer->line);
 	}
 	if (lexer->last_type == SERVER || lexer->last_type == LOCATION_MATCH)
 	{
@@ -121,21 +116,21 @@ token_T lexer_parse_id(lexer_T *lexer)
 		if (lexer->depth != 0)
 			print_and_exit("Error : server is not allowed inside another server", lexer->line);
 		lexer->last_type = SERVER;
-		return token_T(value, SERVER);
+		return token_T(value, SERVER, lexer->line);
 	}
 	else if (value == "location")
 	{
 		if (lexer->depth == 0)
 			print_and_exit("Error : location is not allowed outside of a server", lexer->line);
 		lexer->last_type = LOCATION;
-		return token_T(value, LOCATION);
+		return token_T(value, LOCATION, lexer->line);
 	}
 	if (!valid_id(value))
 	{
 		print_and_exit("Error : invalid id", lexer->line);
 	}
 	lexer->last_type = ID;
-	return token_T(value, ID);
+	return token_T(value, ID, lexer->line);
 }
 
 
@@ -148,7 +143,7 @@ token_T lexer_get_token(lexer_T *lexer)
 		{
 			if (lexer->depth != 0)
 				print_and_exit("Error : missing closing bracket", lexer->line - 1);
-			return token_T("", END_OF_FILE);
+			return token_T("", END_OF_FILE, lexer->line);
 		}
 		if (valid_string(lexer->c))
 		{
@@ -202,7 +197,7 @@ token_T lexer_get_token(lexer_T *lexer)
 	}
 	if (lexer->depth != 0)
 		print_and_exit("Error : missing closing bracket", lexer->line);
-	return token_T(0, END_OF_FILE);
+	return token_T(0, END_OF_FILE, lexer->line);
 }
 
 

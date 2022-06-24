@@ -4,49 +4,74 @@ parser_T::parser_T()
 {
 }
 
-parser_T::parser_T(lexer_T *lexer)
+parser_T::parser_T(std::vector<token_T> tokens)
 {
-	this->lexer = lexer;
-	this->token = lexer_get_token(lexer);
-}
-
-token_T parser_T::parser_eat(int type)
-{
-	if (this->token.type != type)
+	this->root = "";
+	this->body_size_limit = 0;
+	for(size_t i = 0; i < tokens.size(); i++)
 	{
-		std::cerr << "Parser: Unexpected token: `" <<  token_type_to_string(this->token.type) << "` Was expecting : "<< token_type_to_string(type) << '\n';
-		exit(1);
+		if (tokens[i].type == ID)
+		{
+			if (tokens[i].value == "root")
+			{
+				i++;
+				this->root = tokens[i].value;
+			}
+			else if (tokens[i].value == "body_size_limit")
+			{
+				i++;
+				try
+				{
+						this->body_size_limit = std::stoi(tokens[i].value);
+				}
+				catch(const std::exception& e)
+				{
+					print_and_exit("Error: body_size_limit must be an integer", tokens[i].line);
+				}
+				if (this->body_size_limit < 0)
+				{
+					print_and_exit("Error: body_size_limit must be positive", tokens[i].line);
+				}
+			}
+			else if (tokens[i].value == "allowed_methods")
+			{
+				i++;
+				while(tokens[i].type != SEMICOLON)
+				{
+					this->allowed_methods.push_back(tokens[i].value);
+					i++;
+				}
+			}
+			else if (tokens[i].value == "index")
+			{
+				while(tokens[i].type != SEMICOLON)
+				{
+					i++;
+					this->index.push_back(tokens[i].value);
+				}
+			}
+			else if (tokens[i].value == "error_page")
+			{
+				this->error_pages.insert(parse_error_page(tokens,i));
+			}
+			else if (tokens[i].type == SERVER)
+			{
+				// to be implemented later
+				break;
+			}
+		}
 	}
-
-	this->token = lexer_get_token(this->lexer);
-	return (this->token);
 }
 
-// AST_T *parser_T::parser_parse(parser_T *parser)
-// {
-// 	(void) parser;
-// 	return init_ast(A_NOOP);
-// }
-
-// AST_T *parser_T::parser_parse_compound(parser_T *parser)
-// {
-// 	// AST_T *compound = init_ast(AST_COMPOUND);
-// 	while(parser->token->type != END_OF_FILE)
-// 	{
-// 		/* AST_T * child =  */ parser_parse(parser);
-// 	}
-
-// 	return (init_ast(A_NOOP));
-// }
 
 parser_T::parser_T(const parser_T& parser)
 {
-	this->lexer = parser.lexer;
-	this->token = parser.token;
+	this->root = parser.root;
+	this->body_size_limit = parser.body_size_limit;
 }
 parser_T& parser_T::operator=(const parser_T& parser)
 {
-	this->lexer = parser.lexer;
-	this->token = parser.token;
+	this->root = parser.root;
+	this->body_size_limit = parser.body_size_limit;
 	return *this;
 }
