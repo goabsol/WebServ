@@ -20,8 +20,24 @@ std::string token_type_to_string(int type)
 		case ID: return "ID";
 		case LEFTBRACE: return "LEFTBRACE";
 		case RIGHTBRACE: return "RIGHTBRACE";
-		case COLON: return "COLON";
 		case SEMICOLON: return "SEMICOLON";
+		case VALUE: return "VALUE";
+		case SERVER: return "SERVER";
+		case LOCATION: return "LOCATION";
+		case LOCATION_MATCH : return "LOCATION_MATCH";
 	}
 	return "END_OF_FILE";
+}
+
+token_T::token_T(const token_T& tok)
+{
+	this->value = tok.value;
+	this->type = tok.type;
+}
+
+token_T& token_T::operator=(const token_T& tok)
+{
+	this->value = tok.value;
+	this->type = tok.type;
+	return *this;
 }

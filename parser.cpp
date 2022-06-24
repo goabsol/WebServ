@@ -38,3 +38,15 @@ token_T parser_T::parser_eat(int type)
 
 // 	return (init_ast(A_NOOP));
 // }
+
+parser_T::parser_T(const parser_T& parser)
+{
+	this->lexer = parser.lexer;
+	this->token = parser.token;
+}
+parser_T& parser_T::operator=(const parser_T& parser)
+{
+	this->lexer = parser.lexer;
+	this->token = parser.token;
+	return *this;
+}

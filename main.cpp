@@ -1,18 +1,24 @@
 #include "lexer.hpp"
 #include "parser.hpp"
 
+
+
+void fancy_print(std::string &value, int type)
+{
+	std::cout << GREEN << "value: |" << RESET_COLOR << std::left << std::setw(30)<< value << GREEN  <<"| type: |" << RESET_COLOR << token_type_to_string(type) << std::endl;
+}
+
 void conf_parse(lexer_T *lexer)
 {
-	// parser_T parser = parser_T(lexer);
-	// AST_T *root = parser_parse(parser);
-	// std::cout << root << '\n';
-	// std::cout << parser.token.value << '\n';
-	// parser = parser_T(lexer);
-	// std::cout << parser.token.value << '\n';
+	std::vector<token_T> tokens;
 	token_T tok;
 	while ((tok = lexer_get_token(lexer)).type != END_OF_FILE)
 	{
-		std::cout << GREEN << "Token : " << RESET_COLOR << std::left <<std::setw(15) << tok.value << GREEN   << " Token type :" << RESET_COLOR << token_type_to_string(tok.type) << std::endl;
+		tokens.push_back(tok);
+	}
+	for(size_t i = 0; i < tokens.size(); i++)
+	{
+		fancy_print(tokens[i].value, tokens[i].type);
 	}
 }
 

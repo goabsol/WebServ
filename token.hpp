@@ -5,10 +5,14 @@
 #define ID 0
 #define LEFTBRACE 1
 #define RIGHTBRACE 2
-#define COLON 3
 #define SEMICOLON 4
 #define END_OF_FILE 5
 #define NUMBER 6
+#define VALUE 7
+#define START_OF_FILE 8
+#define SERVER 9
+#define LOCATION 10
+#define LOCATION_MATCH 11
 
 
 class  token_T
@@ -18,6 +22,8 @@ class  token_T
 		int type;
 		token_T(std::string, int type);
 		token_T();
+		token_T(const token_T& tok);
+		token_T& operator=(const token_T& tok);
 };
 
 

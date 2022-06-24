@@ -10,6 +10,8 @@ class parser_T
 		token_T token;
 		parser_T(lexer_T *lexer);
 		parser_T();
+		parser_T(const parser_T& parser);
+		parser_T& operator=(const parser_T& parser);
 		token_T parser_eat(int type);
 
 		// AST_T *parser_parse(parser_T *parser);
