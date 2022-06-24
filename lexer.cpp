@@ -141,7 +141,7 @@ token_T lexer_get_token(lexer_T *lexer)
 		lexer_skip_whitespace(lexer);
 		if (lexer->i >= lexer->src_size || lexer->c == '\0')
 		{
-			if (lexer->depth != 0)
+			if (lexer->depth != 0 || (lexer->last_type != SEMICOLON && lexer->last_type != RIGHTBRACE))
 				print_and_exit("Error : missing closing bracket", lexer->line - 1);
 			return token_T("", END_OF_FILE, lexer->line);
 		}
@@ -195,7 +195,7 @@ token_T lexer_get_token(lexer_T *lexer)
 		default : std::cerr << "Unknown character: '" << lexer->c << "' at line : " << lexer->line << std::endl; exit(1);
 		}
 	}
-	if (lexer->depth != 0)
+	if (lexer->depth != 0 || (lexer->last_type != SEMICOLON && lexer->last_type != RIGHTBRACE))
 		print_and_exit("Error : missing closing bracket", lexer->line);
 	return token_T(0, END_OF_FILE, lexer->line);
 }

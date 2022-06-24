@@ -34,12 +34,14 @@ token_T::token_T(const token_T& tok)
 {
 	this->value = tok.value;
 	this->type = tok.type;
+	this->line = tok.line;
 }
 
 token_T& token_T::operator=(const token_T& tok)
 {
 	this->value = tok.value;
 	this->type = tok.type;
+	this->line = tok.line;
 	return *this;
 }
 
@@ -67,3 +69,4 @@ std::pair<int,std::string> parse_error_page(std::vector<token_T> tokens,  size_t
 	page = tokens[i].value;
 	return (std::make_pair(code, page));
 }
+

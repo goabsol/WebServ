@@ -54,11 +54,15 @@ parser_T::parser_T(std::vector<token_T> tokens)
 			{
 				this->error_pages.insert(parse_error_page(tokens,i));
 			}
-			else if (tokens[i].type == SERVER)
+			else
 			{
-				// to be implemented later
-				break;
+				print_and_exit("Error: unknown token: " + tokens[i].value, tokens[i].line);
 			}
+		}
+		else if (tokens[i].type == SERVER)
+		{
+			servers.push_back(Server_T(tokens, i));
+			// break;
 		}
 	}
 }

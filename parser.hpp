@@ -2,6 +2,7 @@
 
 #include "lexer.hpp"
 #include "parsing_tools.hpp"
+#include "server_parse.hpp"
 
 class parser_T
 {
@@ -16,4 +17,5 @@ class parser_T
 		std::map<int, std::string> error_pages;
 		int body_size_limit;
 		std::string root;
+		std::vector<Server_T> servers;
 };
