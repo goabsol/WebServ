@@ -91,7 +91,7 @@ int main()
 	fd_set master = read_fd;
 	fd_set write_fd;
 	FD_ZERO(&write_fd);
-	std::map<SOCKET,Client>clients;
+	std::map<SOCKET,ClientRequest>clients;
 	while (1)
 	{
 		//making copies of read_fd and write_fd to avoid modifying the original with select
@@ -128,22 +128,21 @@ int main()
 					i = client_fd;
 				}
 				if (clients.find(i) == clients.end())
-					clients[i] = Client(i);
+					clients[i] = ClientRequest(i);
 				std::cout << "Data received" << std::endl;
 				////////////////////////////////////////////////////////////////////
-				RequestHeader req = parse_request(clients[i]);
-				clients[i].setRequest(req.getData());
+				clients[i].getRequest();
 				////////////////////////////////////////////////////////////////////
-				if (req.getHasError())
+				if (clients[i].getHasError())
 				{
-					std::cout << req.getError() << std::endl;
+					std::cout << clients[i].getError() << std::endl;
 					FD_CLR(i, &read_fd);
 					close(i);
 					clients.erase(i);
 				}
-				else if (req.getIsDone())
+				else if (clients[i].getIsDone())
 				{
-					std::cout << "Data: " << req.getData() << std::endl;
+					std::cout << "Data: " << clients[i].getData() << std::endl;
 					FD_CLR(i, &read_fd);
 					FD_SET(i, &write_fd);
 				}
