@@ -62,7 +62,6 @@ parser_T::parser_T(std::vector<token_T> tokens)
 		else if (tokens[i].type == SERVER)
 		{
 			servers.push_back(Server_T(tokens, i));
-			// break;
 		}
 	}
 }

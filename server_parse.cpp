@@ -146,6 +146,16 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i)
 					print_and_exit("Error: autoindex must be on or off", tokens[i].line);
 			}
 		}
+		else if (tokens[i].type == LOCATION)
+		{
+			i++;
+			std::string location_match = tokens[i].value;
+			if (locations.find(location_match) != locations.end())
+			{
+				print_and_exit("Error: location already defined", tokens[i].line);
+			}
+			this->locations.insert(std::make_pair(location_match, Location_T(tokens, i)));
+		}
 		else if (tokens[i].type == VALUE)
 		{
 			print_and_exit("Error: invalid token", tokens[i].line);
@@ -166,4 +176,21 @@ Server_T::Server_T(const Server_T& server)
 	this->server_name = server.server_name;
 	this->cgi = server.cgi;
 	this->autoindex = server.autoindex;
+	this->locations = server.locations;
+}
+
+Server_T& Server_T::operator=(const Server_T& server)
+{
+	this->root = server.root;
+	this->body_size_limit = server.body_size_limit;
+	this->allowed_methods = server.allowed_methods;
+	this->index = server.index;
+	this->error_pages = server.error_pages;
+	this->ports = server.ports;
+	this->ipv4 = server.ipv4;
+	this->server_name = server.server_name;
+	this->cgi = server.cgi;
+	this->autoindex = server.autoindex;
+	this->locations = server.locations;
+	return *this;
 }

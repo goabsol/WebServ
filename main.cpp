@@ -16,8 +16,6 @@ void conf_parse(lexer_T *lexer)
 		tokens.push_back(tok);
 	}
 	parser_T parser = parser_T(tokens);
-	std::cout << parser.servers.size() << std::endl;
-
 }
 
 int main(int ac, char **av)
