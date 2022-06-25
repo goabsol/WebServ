@@ -21,7 +21,7 @@ class ClientRequest
 		std::string getData();
 		void setData(std::string line);
 		ClientRequest &	operator=( ClientRequest const & rhs );
-
+		void checkLineValidity(std::string line);
 		void parseRequest();
 		void storeRequest();
 
@@ -35,6 +35,7 @@ class ClientRequest
 		std::string data;
 		bool hasError;
 		std::string errorMessage;
+		int requestPosition;
 		bool isDone;
 };
 
