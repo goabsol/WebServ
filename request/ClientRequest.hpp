@@ -5,7 +5,7 @@
 #include <vector>
 #include <map>
 #include <sys/socket.h>
-#include "tools.hpp"
+#include "../tools.hpp"
 
 class ClientRequest
 {
@@ -13,17 +13,19 @@ class ClientRequest
 
 		ClientRequest();
 		ClientRequest( ClientRequest const & src );
-		ClientRequest (int &);
+		ClientRequest (int);
 		~ClientRequest();
 		bool getHasError();
 		bool getIsDone();
 		std::string getError();
 		std::string getData();
+		int getSocket();
 		void setData(std::string line);
 		ClientRequest &	operator=( ClientRequest const & rhs );
 		void checkLineValidity(std::string line);
 		void parseRequest();
 		void storeRequest();
+		bool isValidURI(std::string &);
 
 	private:
 		int Socket;
@@ -34,11 +36,11 @@ class ClientRequest
 		std::string body;
 		std::string data;
 		bool hasError;
+		bool needHost;
 		std::string errorMessage;
 		int requestPosition;
 		bool isDone;
 };
 
 std::ostream &			operator<<( std::ostream & o, ClientRequest const & i );
-
 

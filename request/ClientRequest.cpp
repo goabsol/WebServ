@@ -3,15 +3,24 @@
 /*                                                        :::      ::::::::   */
 /*   ClientRequest.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
+/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/25 07:27:41 by ael-bagh         ###   ########.fr       */
+/*   Updated: 2022/06/25 12:16:54 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ClientRequest.hpp"
 
+const std::string tmp[] = {"GET",
+						   "POST",
+						   "PUT",
+						   "DELETE",
+						   "HEAD",
+						   "OPTIONS",
+						   "CONNECT",
+						   "TRACE"};
+const std::vector<std::string> v_methods(tmp,tmp+8);
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
@@ -24,9 +33,9 @@ ClientRequest::ClientRequest( const ClientRequest & src )
 {
 }
 
-ClientRequest::ClientRequest(int &socket) : Socket(socket), data("")
+ClientRequest::ClientRequest(int socket) : Socket(socket), data(""), requestPosition(0), hasError(false), isDone(false)
 {
-	requestPosition = 0;
+	std::cout << socket << " " << this->Socket << std::endl;
 }
 
 /*
@@ -44,10 +53,21 @@ ClientRequest::~ClientRequest()
 
 ClientRequest &				ClientRequest::operator=( ClientRequest const & rhs )
 {
-	//if ( this != &rhs )
-	//{
-		//this->_value = rhs.getValue();
-	//}
+	if ( this != &rhs )
+	{
+		this->Socket = rhs.Socket;
+		this->method = rhs.method;
+		this->requestURI = rhs.requestURI;
+		this->httpVersion = rhs.httpVersion;
+		this->requestFields = rhs.requestFields;
+		this->body = rhs.body;
+		this->data = rhs.data;
+		this->hasError = rhs.hasError;
+		this->needHost = rhs.needHost;
+		this->errorMessage = rhs.errorMessage;
+		this->requestPosition = rhs.requestPosition;
+		this->isDone = rhs.isDone;
+	}
 	return *this;
 }
 
@@ -79,6 +99,10 @@ std::string ClientRequest::getData()
 {
 	return this->data;
 }
+int ClientRequest::getSocket()
+{
+	return this->Socket;
+}
 bool ClientRequest::getIsDone()
 {
 	return this->isDone;
@@ -94,38 +118,62 @@ void ClientRequest::parseRequest()
 	{
 		if (this->data.find("\r\n") != std::string::npos)
 		{
-			if (requestPosition < 2)
-				requestPosition++;
+			if (this->requestPosition < 2)
+				this->requestPosition++;
 			line = this->data.substr(0, this->data.find("\r\n"));
 			this->checkLineValidity(line);
 		}
 		this->data = this->data.substr(this->data.find("\r\n") + 2);
 		//parse the line
 	}
-	requestPosition = 3;
+	this->requestPosition = 3;
 }
 
 void ClientRequest::checkLineValidity(std::string line)
 {
-	if (requestPosition == 1)
+	if (this->requestPosition == 1)
 	{
 		std::vector<std::string> requestline = split_white_space(line);
-		if (requestline.size() != 3)
+		if (requestline.size() != 3 || countChr(line, ' ') != 2)
 		{
-			hasError = 1;
-			errorMessage = "Error: Request line wrong number of parameters";
+			this->hasError = true;
+			this->errorMessage = "Error: Request line wrong number of parameters";
 			return ;
 		}
-		if (requestline[0] != "POST" && requestline[0] != "GET" && requestline[0] != "DELETE")
+		if (std::find(v_methods.begin(), v_methods.end(), requestline[0]) == v_methods.end())
 		{
-			hasError = 1;
-			errorMessage = "Error: Request method is wrong";
+			this->hasError = true;
+			this->errorMessage = "Error: Request line method not valid";
 			return ;
 		}
+		else
+		{
+			this->method = requestline[0];
+		}
+		this->requestURI = requestline[1];
+		this->httpVersion = requestline[2];
+		// {
+		// 	hasError = 1;
+		// 	errorMessage = "Error: Request method is wrong";
+		// 	return ;
+		// }
 		// im reading about what an URI should be like so meh
 		//if (requestline[1] )
 	}
+	else if (requestPosition == 2)
+	{
+		char *l = strdup(line.c_str());
+		std::string p(strtok(l, ": "));
+		std::string v(strtok(l, ": "));
+		requestFields[p]= v;
+		std::cout << p << " aha " << v << std::endl;
+	}
+	else
+	{
+
+	}
 }
+
 
 void ClientRequest::storeRequest()
 {
@@ -134,9 +182,21 @@ void ClientRequest::storeRequest()
     int bytes_read;
     std::vector<std::string> lines;
     bytes_read = recv(this->Socket, buffer, 1024, 0);
-    this->data += buffer;
-    if (this->data.find("\r\n\r\n") != std::string::npos)
+	std::cout << bytes_read << std::endl;
+	if (bytes_read > 0)
+	{
+		this->data += std::string(buffer);
+	}
+	else
+	{
+		this->hasError = true;
+		this->errorMessage = "Error: recv() failed";
+	}
+    if (this->data.find("\n\n") != std::string::npos)
     {
+		std::cout << "found" << std::endl;
 		this->parseRequest();
+		
     }
+	std::cout << this->data << std::endl;
 }

@@ -1,19 +1,18 @@
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <errno.h>
-#include <iostream>
-#include <time.h>
-#include <string>
-#include <vector>
-#include <map>
-#include "tools.hpp"
-#include "./request/ClientRequest.hpp"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   webserv.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/06/25 10:16:14 by arhallab          #+#    #+#             */
+/*   Updated: 2022/06/25 11:18:13 by arhallab         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
-#define SOCKET int
+
+
+#include "webserv.hpp"
 typedef struct parsed_servers{
 	std::vector<std::pair<int, int> > port;
 	std::string name;
@@ -44,9 +43,9 @@ int main()
 	fd_set read_fd;
 	FD_ZERO(&read_fd);
 	//create socket for each port
-	for (int i = 0; i < servers.size(); i++)
+	for (size_t i = 0; i < servers.size(); i++)
 	{
-		for (int j = 0; j < servers[i].port.size(); j++)
+		for (size_t j = 0; j < servers[i].port.size(); j++)
 		{
 			server_fd = socket(AF_INET, SOCK_STREAM, 0);
 			if (server_fd < 0)
@@ -101,7 +100,7 @@ int main()
 		{
 			if (FD_ISSET(i, &rcopy)) //if socket is ready to read
 			{
-				std::cout << "Socket " << i << " of " << m_socket_to_server[i].name << " is ready for reading" << std::endl;
+				// std::cout << "Socket " << i << " of " << m_socket_to_server[i].name << " is ready for reading" << std::endl;
 				if (FD_ISSET(i, &master)) //if socket is a server socket create a new connection and add to read_fd
 				{
 					std::cout << "New connection" << std::endl;
@@ -122,8 +121,10 @@ int main()
 					i = client_fd;
 				}
 				if (clients.find(i) == clients.end())
+				{
 					clients[i] = ClientRequest(i);
-				std::cout << "Data received" << std::endl;
+					std::cout << i  << " fxfcv " << clients[i].getSocket() << std::endl;
+				}
 				////////////////////////////////////////////////////////////////////
 				clients[i].storeRequest();
 				////////////////////////////////////////////////////////////////////
