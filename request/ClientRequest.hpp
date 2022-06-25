@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <sys/socket.h>
+#include "tools.hpp"
 
 class ClientRequest
 {
@@ -22,7 +23,7 @@ class ClientRequest
 		ClientRequest &	operator=( ClientRequest const & rhs );
 
 		void parseRequest();
-		void getRequest();
+		void storeRequest();
 
 	private:
 		int Socket;
@@ -38,3 +39,5 @@ class ClientRequest
 };
 
 std::ostream &			operator<<( std::ostream & o, ClientRequest const & i );
+
+

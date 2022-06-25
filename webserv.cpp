@@ -10,20 +10,14 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "./request/request.hpp"
+#include "tools.hpp"
+#include "./request/ClientRequest.hpp"
 
 #define SOCKET int
 typedef struct parsed_servers{
 	std::vector<std::pair<int, int> > port;
 	std::string name;
 }ps;
-void *memeset(void *s, int c, size_t n) //it's a memset function but in memeset
-{
-    char *p = (char *)s;
-    while (n--)
-        *p++ = c;
-    return s;
-}
 
 int main()
 {
@@ -131,7 +125,7 @@ int main()
 					clients[i] = ClientRequest(i);
 				std::cout << "Data received" << std::endl;
 				////////////////////////////////////////////////////////////////////
-				clients[i].getRequest();
+				clients[i].storeRequest();
 				////////////////////////////////////////////////////////////////////
 				if (clients[i].getHasError())
 				{

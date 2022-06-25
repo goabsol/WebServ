@@ -85,3 +85,11 @@ std::vector<std::string> validMethods(std::string &methods)
 	}
 	return ret;
 }
+
+void *memeset(void *s, int c, size_t n) //it's a memset function but in memeset
+{
+    char *p = (char *)s;
+    while (n--)
+        *p++ = c;
+    return s;
+}

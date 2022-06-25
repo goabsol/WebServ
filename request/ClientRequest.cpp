@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/24 13:03:39 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/06/25 04:49:09 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,12 +97,11 @@ void ClientRequest::parseRequest()
 	}
 }
 
-void ClientRequest::getRequest()
+void ClientRequest::storeRequest()
 {
 	char buffer[1024];
-	memset(buffer, 0, 1024);
+	memeset(buffer, 0, 1024);
     int bytes_read;
-    std::string rest = "";
     std::vector<std::string> lines;
     bytes_read = recv(this->Socket, buffer, 1024, 0);
     this->data += buffer;
