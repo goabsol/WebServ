@@ -1,4 +1,5 @@
 
+
 #include "tools.hpp"
 std::vector<std::string> split_white_space(std::string &line)
 {
@@ -103,4 +104,20 @@ void *memeset(void *s, int c, size_t n) //it's a memset function but in memeset
     while (n--)
         *p++ = c;
     return s;
+}
+
+void fancy_print(std::string &value, int type)
+{
+	std::cout << GREEN << "value: |" << RESET_COLOR << std::left << std::setw(30)<< value << GREEN  <<"| type: |" << RESET_COLOR << token_type_to_string(type) << std::endl;
+}
+
+void conf_parse(lexer_T *lexer)
+{
+	std::vector<token_T> tokens;
+	token_T tok;
+	while ((tok = lexer_get_token(lexer)).type != END_OF_FILE)
+	{
+		tokens.push_back(tok);
+	}
+	parser_T parser = parser_T(tokens);
 }

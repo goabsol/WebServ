@@ -6,13 +6,14 @@
 #    By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/06/10 05:37:53 by arhallab          #+#    #+#              #
-#    Updated: 2022/06/26 09:46:42 by arhallab         ###   ########.fr        #
+#    Updated: 2022/06/26 10:40:15 by arhallab         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = webserv
 
-SRC  = webserv.cpp tools.cpp request/ClientRequest.cpp
+SRC  = lexer.cpp location_parser.cpp parser.cpp parsing_tools.cpp webserv.cpp\
+	   server_parse.cpp socket.cpp token.cpp tools.cpp request/ClientRequest.cpp\
 
 OBJ  = $(SRC:%.cpp=%.o)
 

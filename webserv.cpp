@@ -3,22 +3,21 @@
 /*                                                        :::      ::::::::   */
 /*   webserv.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/25 10:16:14 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/26 09:32:01 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/06/26 10:46:48 by ael-bagh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-
-
 #include "webserv.hpp"
+
 typedef struct parsed_servers{
 	std::vector<std::pair<int, int> > port;
 	std::string name;
 }ps;
 
-int main()
+int main(int ac, char **av)
 {
 	//dummy servers
 	std::vector<ps> servers;
@@ -36,6 +35,26 @@ int main()
 	servers.push_back(s);
 
 	std::map<SOCKET,ps> m_socket_to_server;
+	if (ac != 2)
+	{
+		std::cerr << "Usage : ./webserv <config_file>" << std::endl;
+	}
+	std::ifstream file(av[1]);
+	if (!file.is_open())
+	{
+		std::cerr << "Error : config file not found" << std::endl;
+		exit(1);
+	}
+	std::string src;
+	while (file.good())
+	{
+		std::string line;
+		std::getline(file, line);
+		src += line + "\n";
+	}
+	lexer_T lexer = lexer_T(src);
+	conf_parse(&lexer);
+	file.close();
     struct sockaddr_in johnny; 
     SOCKET server_fd;
 	SOCKET max_fd = 0;
@@ -126,7 +145,8 @@ int main()
 					std::cout << i  << " fxfcv " << clients[i].getSocket() << std::endl;
 				}
 				////////////////////////////////////////////////////////////////////
-				clients[i].storeRequest();
+				if (!clients[i].getIsDone())
+					clients[i].storeRequest();
 				////////////////////////////////////////////////////////////////////
 				if (clients[i].getHasError())
 				{

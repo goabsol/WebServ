@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ClientRequest.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/25 12:16:54 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/06/26 10:47:42 by ael-bagh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -192,11 +192,11 @@ void ClientRequest::storeRequest()
 		this->hasError = true;
 		this->errorMessage = "Error: recv() failed";
 	}
-    if (this->data.find("\n\n") != std::string::npos)
+    if (this->data.find("\r\n") != std::string::npos)
     {
 		std::cout << "found" << std::endl;
 		this->parseRequest();
-		
+		isDone = true;
     }
 	std::cout << this->data << std::endl;
 }
