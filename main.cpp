@@ -1,117 +1,45 @@
-#include "tools.hpp"
+#include "lexer.hpp"
+#include "parser.hpp"
 
-std::string replace_white_spaces(std::string const & str)
+
+void fancy_print(std::string &value, int type)
 {
-	std::string new_str = "";
-	for (int i = 0; i < str.length(); i++)
-	{
-		if (!iswspace(str[i]))
-		{
-			new_str += str[i];
-		}
-		else if (iswspace(str[i]) && new_str.back() != ' ')
-		{
-			new_str += ' ';
-		}
-	}
-	return new_str;
+	std::cout << GREEN << "value: |" << RESET_COLOR << std::left << std::setw(30)<< value << GREEN  <<"| type: |" << RESET_COLOR << token_type_to_string(type) << std::endl;
 }
 
-int findStart(std::vector<std::string> &lines)
+void conf_parse(lexer_T *lexer)
 {
-	int i = 0;
-	while ((i < lines.size()) && (lines[i] != "server"))
+	std::vector<token_T> tokens;
+	token_T tok;
+	while ((tok = lexer_get_token(lexer)).type != END_OF_FILE)
 	{
-		i++;
+		tokens.push_back(tok);
 	}
-	if (i >= lines.size())
-	{
-		std::cerr << "Error : no servers in config file" << std::endl;
-		exit(1);
-	}
-	return i;
+	parser_T parser = parser_T(tokens);
 }
 
-int find_end_of_server(std::vector<std::string> &lines, int start)
+int main(int ac, char **av)
 {
-	int i = start;
-	while(i < lines.size() && lines[i] != "server")
-	{
-		i++;
-	}
-	if (i == start)
-	{
-		std::cerr << "Error : invalid server bock" << std::endl;
-		exit(1);
-	}
-	return (i);
-}
-
-void parse_conf(std::vector<std::string> &lines)
-{
-	int start_of_servers = 0;
-	std::vector<Server> servers;
-	start_of_servers = findStart(lines);
-	Conf global_config = Conf(lines, start_of_servers);
-	// std::map<std::string, std::string>::iterator it;
-	// for (it = global_config.error_pages.begin(); it != global_config.error_pages.end(); it++)
-	// {
-	// 	std::cout << it->first << " " << it->second << std::endl;
-	// }
-	// std::cout << "root: " << global_config.root << std::endl;
-	// for (int i = 0; i < global_config.allowed_methods.size(); i++)
-	// {
-	// 	std::cout << global_config.allowed_methods[i] << '\n';
-	// }
-	// for(int i = 0; i < global_config.index.size(); i++)
-	// {
-	// 	std::cout << global_config.index[i] << '\n';
-	// }
-	int end_of_server = 0;
-	while(end_of_server < lines.size())
-	{
-		end_of_server = (find_end_of_server(lines, start_of_servers + 1));
-		Server server = Server(lines, start_of_servers + 1, end_of_server, global_config);
-		servers.push_back(server);
-		start_of_servers = end_of_server;
-	}
-	for(int i = 0; i < servers[0].locations.size(); i++)
-	{
-		std::cout << servers[0].locations[i].location_value << std::endl;
-	}
-}
-
-int main(int argc, char **argv, char **env)
-{
-	std::ifstream indata;
-	std::ofstream outdata;
-	outdata.open("test_parsing.conf");
-	std::string line;
-	if (argc != 2)
+	if (ac != 2)
 	{
 		std::cerr << "Usage : ./webserv <config_file>" << std::endl;
-		return (1);
 	}
-	indata.open(argv[1]);
-	if (!indata)
+	std::ifstream file(av[1]);
+	if (!file.is_open())
 	{
-		std::cerr << "Error: Could not open configuration file." << std::endl;
-		return (1);
+		std::cerr << "Error : config file not found" << std::endl;
+		exit(1);
 	}
-	std::vector<std::string> lines;
-	while (getline(indata, line))
+	std::string src;
+	while (file.good())
 	{
-		size_t ind;
-		if ((ind = line.find('#')) != std::string::npos)
-			line.erase(ind);
-		line = replace_white_spaces(line);
-		if (line[0] == ' ')
-			line.erase(0, 1);
-		if (line != "")
-		{
-			lines.push_back(line);
-			outdata << line << std::endl;
-		}
+		std::string line;
+		std::getline(file, line);
+		src += line + "\n";
 	}
-	parse_conf(lines);
+	lexer_T lexer = lexer_T(src);
+	conf_parse(&lexer);
+	file.close();
+	// while(1);
+	return 0;
 }

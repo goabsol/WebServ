@@ -1,23 +1,21 @@
 #pragma once
 
+#include "lexer.hpp"
+#include "parsing_tools.hpp"
+#include "server_parse.hpp"
 
-
-#include "tools.hpp"
-
-
-class Conf
+class parser_T
 {
 	public:
-		std::string root;
+		token_T token;
+		parser_T(std::vector<token_T> tokens);
+		parser_T();
+		parser_T(const parser_T& parser);
+		parser_T& operator=(const parser_T& parser);
 		std::vector<std::string> allowed_methods;
 		std::vector<std::string> index;
-		std::map<std::string, std::string> error_pages;
+		std::map<int, std::string> error_pages;
 		int body_size_limit;
-		
-		
-		
-		void specifyToken(std::string line);
-		Conf(std::vector<std::string> &lines, int startOfServer);
+		std::string root;
+		std::vector<Server_T> servers;
 };
-
-

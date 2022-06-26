@@ -14,8 +14,8 @@
 #include <vector>
 #include <map>
 #include <fstream>
-#include "Location.hpp"
-#include "Server.hpp"
+#include "server_parse.hpp"
+#include "location_parser.hpp"
 #include "parser.hpp"
 
 std::vector<std::string> split_white_space(std::string &line);
