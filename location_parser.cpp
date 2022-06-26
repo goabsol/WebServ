@@ -101,9 +101,7 @@ Location_T::Location_T(std::vector<token_T> tokens, size_t &i)
 		}
 		else if (tokens[i].type == LOCATION)
 		{
-			i++;
-			std::string location_match = tokens[i].value;
-			locations[location_match] = Location_T(tokens, i);
+			print_and_exit("Error: cannot have nested locations", tokens[i].line);
 
 		}
 		else if (tokens[i].type == VALUE)
