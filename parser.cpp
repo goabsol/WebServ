@@ -71,10 +71,18 @@ parser_T::parser_T(const parser_T& parser)
 {
 	this->root = parser.root;
 	this->body_size_limit = parser.body_size_limit;
+	this->allowed_methods = parser.allowed_methods;
+	this->index = parser.index;
+	this->error_pages = parser.error_pages;
+	this->servers = parser.servers;
 }
 parser_T& parser_T::operator=(const parser_T& parser)
 {
 	this->root = parser.root;
 	this->body_size_limit = parser.body_size_limit;
+	this->allowed_methods = parser.allowed_methods;
+	this->index = parser.index;
+	this->error_pages = parser.error_pages;
+	this->servers = parser.servers;
 	return *this;
 }

@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "webserv.hpp"
+#include "parser.hpp"
 
 typedef struct parsed_servers{
 	std::vector<std::pair<int, int> > port;
@@ -20,6 +21,7 @@ typedef struct parsed_servers{
 int main(int ac, char **av)
 {
 	//dummy servers
+	parser_T parser = parse_file(ac, av);
 	std::vector<ps> servers;
 	ps s;
 	s.port.push_back(std::make_pair(0, 8080));

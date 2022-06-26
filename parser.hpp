@@ -19,3 +19,6 @@ class parser_T
 		std::string root;
 		std::vector<Server_T> servers;
 };
+
+
+parser_T parse_file(int ac, char **av);
