@@ -1,3 +1,5 @@
+#pragma once
+
 #include "parsing_tools.hpp"
 #include "token.hpp"
 

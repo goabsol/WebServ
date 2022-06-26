@@ -16,7 +16,13 @@
 #include <fstream>
 #include "server_parse.hpp"
 #include "location_parser.hpp"
+#include "lexer.hpp"
 #include "parser.hpp"
+
+
+void fancy_print(std::string &value, int type);
+
+void conf_parse(lexer_T *lexer);
 
 std::vector<std::string> split_white_space(std::string &line);
 
