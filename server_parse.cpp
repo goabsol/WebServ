@@ -4,7 +4,7 @@ bool digits_and_colons(std::string &value)
 {
 	for (size_t i = 0; i < value.size(); i++)
 	{
-		if (!isdigit(value[i]) && value[i] != ':')
+		if (!isdigit(value[i]) && value[i] != '.')
 			return false;
 	}
 	return true;
@@ -41,7 +41,7 @@ void valid_ipv4(std::string &value, int line)
 	{
 		print_and_exit("Error : invalid ipv4", line);
 	}
-	std::vector<std::string> parts = split(value, ':');
+	std::vector<std::string> parts = split(value, '.');
 	if (parts.size() != 4)
 	{
 		print_and_exit("Error : invalid ipv4", line);

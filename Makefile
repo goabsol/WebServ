@@ -12,14 +12,14 @@
 
 NAME = webserv
 
-SRC  = lexer.cpp location_parser.cpp parser.cpp parsing_tools.cpp webserv.cpp conf_file.cpp\
-	   server_parse.cpp socket.cpp token.cpp tools.cpp request/ClientRequest.cpp\
+SRC  = token.cpp lexer.cpp location_parser.cpp parser.cpp webserv.cpp conf_file.cpp\
+	   server_parse.cpp socket.cpp  tools.cpp request/ClientRequest.cpp\
 
 OBJ  = $(SRC:%.cpp=%.o)
 
 HDR  = $(SRC:%.cpp=%.h)
 
-FLG  = 
+FLG  = -fsanitize=address -g
 
 all : $(NAME)
 

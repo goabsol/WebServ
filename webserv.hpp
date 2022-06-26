@@ -25,6 +25,7 @@
 #include <vector>
 #include <map>
 #include "tools.hpp"
+#include "conf_file.hpp"
 #include "./request/ClientRequest.hpp"
 
 #define SOCKET int

@@ -11,52 +11,12 @@
 /* ************************************************************************** */
 
 #include "webserv.hpp"
-#include "parser.hpp"
 
-typedef struct parsed_servers{
-	std::vector<std::pair<int, int> > port;
-	std::string name;
-}ps;
 
 int main(int ac, char **av)
 {
 	//dummy servers
 	parser_T parser = parse_file(ac, av);
-	std::vector<ps> servers;
-	ps s;
-	s.port.push_back(std::make_pair(0, 8080));
-	s.port.push_back(std::make_pair(0, 8081));
-	s.port.push_back(std::make_pair(0, 8082));
-	s.name = "server 1";
-	servers.push_back(s);
-	s.port.clear();
-	s.port.push_back(std::make_pair(0, 8083));
-	s.port.push_back(std::make_pair(0, 8084));
-	s.port.push_back(std::make_pair(0, 8085));
-	s.name = "server 2";
-	servers.push_back(s);
-
-	std::map<SOCKET,ps> m_socket_to_server;
-	if (ac != 2)
-	{
-		std::cerr << "Usage : ./webserv <config_file>" << std::endl;
-	}
-	std::ifstream file(av[1]);
-	if (!file.is_open())
-	{
-		std::cerr << "Error : config file not found" << std::endl;
-		exit(1);
-	}
-	std::string src;
-	while (file.good())
-	{
-		std::string line;
-		std::getline(file, line);
-		src += line + "\n";
-	}
-	lexer_T lexer = lexer_T(src);
-	conf_parse(&lexer);
-	file.close();
     struct sockaddr_in johnny; 
     SOCKET server_fd;
 	SOCKET max_fd = 0;
