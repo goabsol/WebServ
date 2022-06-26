@@ -18,8 +18,7 @@ class Server_T
 		std::string root;
 		std::vector<std::string> cgi;
 		std::vector<std::string> server_name;
-		std::vector<std::string> ports;
-		std::vector<std::string> ipv4;
+		std::vector<std::pair<long, long> >ports;
 		std::map<std::string, Location_T> locations;
 		bool autoindex;
 };
