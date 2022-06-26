@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webserv.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/25 10:16:14 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/26 10:35:02 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/06/26 10:46:48 by ael-bagh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -145,7 +145,8 @@ int main(int ac, char **av)
 					std::cout << i  << " fxfcv " << clients[i].getSocket() << std::endl;
 				}
 				////////////////////////////////////////////////////////////////////
-				clients[i].storeRequest();
+				if (!clients[i].getIsDone())
+					clients[i].storeRequest();
 				////////////////////////////////////////////////////////////////////
 				if (clients[i].getHasError())
 				{
