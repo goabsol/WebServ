@@ -27,3 +27,7 @@ int find_end_of_location(std::vector<std::string> &lines, int start);
 bool string_is_digit(std::string str);
 
 std::vector<std::string> validMethods(std::string &method);
+
+void *memeset(void *s, int c, size_t n);
+
+int countChr(std::string &str, char c);

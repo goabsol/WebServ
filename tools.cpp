@@ -4,7 +4,7 @@ std::vector<std::string> split_white_space(std::string &line)
 {
 	std::vector<std::string> words;
 	std::string word = "";
-	for (int i = 0; i < line.length(); i++)
+	for (size_t i = 0; i < line.length(); i++)
 	{
 		if (!iswspace(line[i]))
 		{
@@ -23,9 +23,20 @@ std::vector<std::string> split_white_space(std::string &line)
 	return words;
 }
 
+int countChr(std::string &str, char c)
+{
+	int count = 0;
+	for (size_t i = 0; i < str.length(); i++)
+	{
+		if (str[i] == c)
+			count++;
+	}
+	return count;
+}
+
 int location_start(std::vector<std::string> &lines, int start)
 {
-	int i = start;
+	size_t i = start;
 	while(i < lines.size() && lines[i].substr(0, lines[i].find(" ")) != "location" && lines[i] != "server")
 	{
 		i++;
@@ -35,12 +46,12 @@ int location_start(std::vector<std::string> &lines, int start)
 
 int find_end_of_location(std::vector<std::string> &lines, int start)
 {
-	int i = start;
+	size_t i = start;
 	while(i < lines.size() && lines[i] != "location" && lines[i] != "server")
 	{
 		i++;
 	}
-	if (i == start)
+	if (i == (size_t)start)
 	{
 		std::cerr << "Error : invalid location bock" << std::endl;
 		exit(1);
@@ -50,7 +61,7 @@ int find_end_of_location(std::vector<std::string> &lines, int start)
 
 bool string_is_digit(std::string str)
 {
-	for (int i = 0; i < str.length(); i++)
+	for (size_t i = 0; i < str.length(); i++)
 	{
 		if (!isdigit(str[i]))
 		{
@@ -74,7 +85,7 @@ std::vector<std::string> validMethods(std::string &methods)
 {
 	std::vector<std::string> tmp = split_white_space(methods), ret;
 
-	for (int i = 0; i < tmp.size(); i++)
+	for (size_t i = 0; i < tmp.size(); i++)
 	{
 		if (!validMethod(tmp[i]) || (find(ret.begin(), ret.end(), tmp[i]) != ret.end()))
 		{
@@ -84,4 +95,12 @@ std::vector<std::string> validMethods(std::string &methods)
 		ret.push_back(tmp[i]);
 	}
 	return ret;
+}
+
+void *memeset(void *s, int c, size_t n) //it's a memset function but in memeset
+{
+    char *p = (char *)s;
+    while (n--)
+        *p++ = c;
+    return s;
 }

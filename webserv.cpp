@@ -1,28 +1,22 @@
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <errno.h>
-#include <iostream>
-#include <time.h>
-#include <string>
-#include <vector>
-#include <map>
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   webserv.cpp                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/06/25 10:16:14 by arhallab          #+#    #+#             */
+/*   Updated: 2022/06/26 09:32:01 by arhallab         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
-#define SOCKET int
+
+
+#include "webserv.hpp"
 typedef struct parsed_servers{
 	std::vector<std::pair<int, int> > port;
 	std::string name;
 }ps;
-void *memeset(void *s, int c, size_t n) //it's a memset function but in memeset
-{
-    char *p = (char *)s;
-    while (n--)
-        *p++ = c;
-    return s;
-}
 
 int main()
 {
@@ -49,9 +43,9 @@ int main()
 	fd_set read_fd;
 	FD_ZERO(&read_fd);
 	//create socket for each port
-	for (int i = 0; i < servers.size(); i++)
+	for (size_t i = 0; i < servers.size(); i++)
 	{
-		for (int j = 0; j < servers[i].port.size(); j++)
+		for (size_t j = 0; j < servers[i].port.size(); j++)
 		{
 			server_fd = socket(AF_INET, SOCK_STREAM, 0);
 			if (server_fd < 0)
@@ -90,6 +84,7 @@ int main()
 	fd_set master = read_fd;
 	fd_set write_fd;
 	FD_ZERO(&write_fd);
+	std::map<SOCKET,ClientRequest>clients;
 	while (1)
 	{
 		//making copies of read_fd and write_fd to avoid modifying the original with select
@@ -105,7 +100,7 @@ int main()
 		{
 			if (FD_ISSET(i, &rcopy)) //if socket is ready to read
 			{
-				std::cout << "Socket " << i << " of " << m_socket_to_server[i].name << " is ready for reading" << std::endl;
+				// std::cout << "Socket " << i << " of " << m_socket_to_server[i].name << " is ready for reading" << std::endl;
 				if (FD_ISSET(i, &master)) //if socket is a server socket create a new connection and add to read_fd
 				{
 					std::cout << "New connection" << std::endl;
@@ -125,19 +120,24 @@ int main()
 					m_socket_to_server[client_fd] = m_socket_to_server[i];
 					i = client_fd;
 				}
-				std::cout << "Data received" << std::endl;
-				char buffer[1024];
-				memset(buffer, 0, 1024);
-				int bytes_read = recv(i, buffer, 1024, 0); //if conection is closed by client or error occured in recv
-				if (bytes_read <= 0)
+				if (clients.find(i) == clients.end())
 				{
-					std::cout << (bytes_read < 0?"Error reading data ":"") << "Connection closed" << std::endl;
+					clients[i] = ClientRequest(i);
+					std::cout << i  << " fxfcv " << clients[i].getSocket() << std::endl;
+				}
+				////////////////////////////////////////////////////////////////////
+				clients[i].storeRequest();
+				////////////////////////////////////////////////////////////////////
+				if (clients[i].getHasError())
+				{
+					std::cout << clients[i].getError() << std::endl;
 					FD_CLR(i, &read_fd);
 					close(i);
+					clients.erase(i);
 				}
-				else //if request is received, remove socket from read_fd and add to write_fd
+				else if (clients[i].getIsDone())
 				{
-					std::cout << "Data: " << buffer << std::endl;
+					std::cout << "Data: " << clients[i].getData() << std::endl;
 					FD_CLR(i, &read_fd);
 					FD_SET(i, &write_fd);
 				}
