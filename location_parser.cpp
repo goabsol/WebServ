@@ -34,8 +34,13 @@ Location_T& Location_T::operator=(const Location_T& location)
 	return *this;
 }
 
-Location_T::Location_T(std::vector<token_T> &tokens, size_t &i)
+Location_T::Location_T(std::vector<token_T> &tokens, size_t &i, Server_T *server)
 {
+	this->allowed_methods = server->allowed_methods;
+	this->autoindex = server->autoindex;
+	this->body_size_limit = server->body_size_limit;
+	this->index = server->index;
+	this->root = server->root;
 	i+=2;
 	while(tokens[i].type != RIGHTBRACE)
 	{

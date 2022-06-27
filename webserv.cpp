@@ -17,7 +17,6 @@ int main(int ac, char **av)
 {
 	//dummy servers
 	parser_T parser = parse_file(ac, av);
-	std::cout << parser.error_pages[404] << std::endl;
     struct sockaddr_in johnny; 
     SOCKET server_fd;
 	SOCKET max_fd = 0;

@@ -66,8 +66,13 @@ void valid_ipv4(std::string &value, int line)
 	}
 }
 
-Server_T::Server_T(std::vector<token_T> tokens, size_t &i)
+Server_T::Server_T(std::vector<token_T> tokens, size_t &i, parser_T *parser)
 {
+	this->root = parser->root;
+	this->allowed_methods = parser->allowed_methods;
+	this->body_size_limit = parser->body_size_limit;
+	this->autoindex = parser->autoindex;
+	this->ipv4_set = false;
 	i+=2;
 	while (tokens[i].type != RIGHTBRACE)
 	{
@@ -121,6 +126,10 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i)
 				while(tokens[i].type == VALUE)
 				{
 					std::vector<std::string> addr = split(tokens[i].value, ':');
+					if (this->ipv4_set)
+					{
+						print_and_exit("only one listen address allowed", tokens[i].line);
+					}
 					if (addr.size() == 1)
 					{
 						if (!isnumber(addr[0]))
@@ -131,12 +140,17 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i)
 					}
 					else if (addr.size() == 2)
 					{
+						if (this->ports.size())
+						{
+							print_and_exit("Cannot listen on multiple addresses", tokens[i].line);
+						}
 						valid_ipv4(addr[0], tokens[i].line);
 						if (!isnumber(addr[1]))
 						{
 							print_and_exit(" port must be an integer", tokens[i].line);
 						}
 						this->ports.push_back(std::make_pair(addr[0], stol(addr[1])));
+						this->ipv4_set = true;
 					}
 					else
 					{
@@ -183,7 +197,7 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i)
 			{
 				print_and_exit(" location already defined", tokens[i].line);
 			}
-			this->locations.insert(std::make_pair(location_match, Location_T(tokens, i)));
+			this->locations.insert(std::make_pair(location_match, Location_T(tokens, i, this)));
 		}
 		else if (tokens[i].type == VALUE)
 		{

@@ -7,3 +7,4 @@ a.out.dSYM
 nginx.conf
 tofix
 webserv
+*.o
