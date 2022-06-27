@@ -1,6 +1,14 @@
 
 
 #include "tools.hpp"
+
+
+void	print_and_exit(const std::string &msg, size_t line)
+{
+	std::cerr << "Error: " << msg << " at line " << line << std::endl;
+	exit(1);
+}
+
 std::vector<std::string> split_white_space(std::string &line)
 {
 	std::vector<std::string> words;

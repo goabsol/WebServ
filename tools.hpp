@@ -14,15 +14,7 @@
 #include <vector>
 #include <map>
 #include <fstream>
-#include "server_parse.hpp"
-#include "location_parser.hpp"
-#include "lexer.hpp"
-#include "parser.hpp"
 
-
-void fancy_print(std::string &value, int type);
-
-void conf_parse(lexer_T *lexer);
 
 std::vector<std::string> split_white_space(std::string &line);
 
@@ -37,3 +29,5 @@ std::vector<std::string> validMethods(std::string &method);
 void *memeset(void *s, int c, size_t n);
 
 int countChr(std::string &str, char c);
+
+void	print_and_exit(const std::string &msg, size_t line);
