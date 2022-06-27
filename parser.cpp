@@ -57,6 +57,10 @@ parser_T::parser_T(std::vector<token_T> tokens)
 				}
 				while(tokens[i].type != SEMICOLON)
 				{
+					if (!validMethod(tokens[i].value))
+					{
+						print_and_exit("invalid method", tokens[i].line);
+					}
 					this->allowed_methods.push_back(tokens[i].value);
 					i++;
 				}
@@ -68,10 +72,11 @@ parser_T::parser_T(std::vector<token_T> tokens)
 				{
 					print_and_exit("index already set", tokens[i].line);
 				}
+				i++;
 				while(tokens[i].type != SEMICOLON)
 				{
-					i++;
 					this->index.push_back(tokens[i].value);
+					i++;
 				}
 				this->index_set = true;
 			}

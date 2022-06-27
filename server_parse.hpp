@@ -28,4 +28,9 @@ class Server_T
 		bool autoindex;
 
 		bool ipv4_set;
+		bool allowed_methods_set;
+		bool index_set;
+		bool body_size_limit_set;
+		bool root_set;
+		bool autoindex_set;
 };
