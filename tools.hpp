@@ -32,3 +32,7 @@ void *memeset(void *s, int c, size_t n);
 int countChr(std::string &str, char c);
 
 void	print_and_exit(const std::string &msg, size_t line);
+
+std::vector<std::string> split(std::string &value, char c);
+
+bool validMethod(std::string &method);

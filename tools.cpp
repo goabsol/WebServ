@@ -82,13 +82,12 @@ bool string_is_digit(std::string str)
 
 bool validMethod(std::string &method)
 {
-	if (method != "POST" && method != "GET" && method != "HEAD" && method != "PUT" && method != "DELETE")
+	if (method != "POST" && method != "GET" && method != "HEAD" && method != "PUT" && method != "DELETE" && method != "OPTIONS" && method != "CONNECT" && method != "TRACE")
 	{
 		return false;
 	}
 	return true;
 }
-
 
 std::vector<std::string> validMethods(std::string &methods)
 {
@@ -114,3 +113,17 @@ void *memeset(void *s, int c, size_t n) //it's a memset function but in memeset
     return s;
 }
 
+std::vector<std::string> split(std::string &value, char c)
+{
+	std::vector<std::string> result;
+	size_t i = 0;
+	while (i < value.size())
+	{
+		size_t j = value.find(c, i);
+		if (j == std::string::npos)
+			j = value.size();
+		result.push_back(value.substr(i, j - i));
+		i = j + 1;
+	}
+	return result;
+}

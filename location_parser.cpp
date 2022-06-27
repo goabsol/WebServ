@@ -20,6 +20,13 @@ Location_T::Location_T(const Location_T& location)
 	autoindex = location.autoindex;
 	upload_store = location.upload_store;
 	locations = location.locations;
+
+	autoindex_set = location.autoindex_set;
+	upload_store_set = location.upload_store_set;
+	body_size_limit_set = location.body_size_limit_set;
+	allowed_methods_set = location.allowed_methods_set;
+	root_set = location.root_set;
+	index_set = location.index_set;
 }
 
 Location_T& Location_T::operator=(const Location_T& location)
@@ -31,6 +38,14 @@ Location_T& Location_T::operator=(const Location_T& location)
 	autoindex = location.autoindex;
 	upload_store = location.upload_store;
 	locations = location.locations;
+
+
+	autoindex_set = location.autoindex_set;
+	upload_store_set = location.upload_store_set;
+	body_size_limit_set = location.body_size_limit_set;
+	allowed_methods_set = location.allowed_methods_set;
+	root_set = location.root_set;
+	index_set = location.index_set;
 	return *this;
 }
 
@@ -41,6 +56,13 @@ Location_T::Location_T(std::vector<token_T> &tokens, size_t &i, Server_T *server
 	this->body_size_limit = server->body_size_limit;
 	this->index = server->index;
 	this->root = server->root;
+
+	this->autoindex_set = false;
+	this->upload_store_set = false;
+	this->body_size_limit_set = false;
+	this->allowed_methods_set = false;
+	this->root_set = false;
+	this->index_set = false;
 	i+=2;
 	while(tokens[i].type != RIGHTBRACE)
 	{
@@ -48,15 +70,25 @@ Location_T::Location_T(std::vector<token_T> &tokens, size_t &i, Server_T *server
 		{
 			if (tokens[i].value == "root")
 			{
+				if (this->root_set)
+				{
+					print_and_exit("Error: root already set", tokens[i].line);
+				}
 				i++;
 				this->root = tokens[i].value;
+				this->root_set = true;
 			}
 			else if (tokens[i].value == "body_size_limit")
 			{
 				i++;
+				if (this->body_size_limit_set)
+				{
+					print_and_exit("Error: body_size_limit already set", tokens[i].line);
+				}
 				try
 				{
 						this->body_size_limit = std::stoi(tokens[i].value);
+						this->body_size_limit_set = true;
 				}
 				catch(const std::exception& e)
 				{
@@ -70,19 +102,34 @@ Location_T::Location_T(std::vector<token_T> &tokens, size_t &i, Server_T *server
 			else if (tokens[i].value == "allowed_methods")
 			{
 				i++;
+				if (this->allowed_methods_set)
+				{
+					print_and_exit("Error: allowed_methods already set", tokens[i].line);
+				}
 				while(tokens[i].type != SEMICOLON)
 				{
+					if (!validMethod(tokens[i].value))
+					{
+						print_and_exit("invalid method", tokens[i].line);
+					}
 					this->allowed_methods.push_back(tokens[i].value);
 					i++;
 				}
+				this->allowed_methods_set = true;
 			}
 			else if (tokens[i].value == "index")
 			{
+				i++;
+				if (this->index_set)
+				{
+					print_and_exit("Error: index already set", tokens[i].line);
+				}
 				while(tokens[i].type != SEMICOLON)
 				{
-					i++;
 					this->index.push_back(tokens[i].value);
+					i++;
 				}
+				this->index_set = true;
 			}
 			else if (tokens[i].value == "cgi")
 			{
@@ -96,12 +143,17 @@ Location_T::Location_T(std::vector<token_T> &tokens, size_t &i, Server_T *server
 			else if (tokens[i].value == "autoindex")
 			{
 				i++;
+				if (this->autoindex_set)
+				{
+					print_and_exit("Error: autoindex already set", tokens[i].line);
+				}
 				if (tokens[i].value == "on")
 					this->autoindex = true;
 				else if (tokens[i].value == "off")
 					this->autoindex = false;
 				else
 					print_and_exit(" autoindex must be on or off", tokens[i].line);
+				this->autoindex_set = true;
 			}
 		}
 		else if (tokens[i].type == LOCATION)
