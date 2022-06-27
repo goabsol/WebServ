@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include <time.h>
 #include <ctime>
 #include <iostream>
 #include <string>
@@ -14,6 +14,7 @@
 #include <vector>
 #include <map>
 #include <fstream>
+#include <fcntl.h>
 
 
 std::vector<std::string> split_white_space(std::string &line);

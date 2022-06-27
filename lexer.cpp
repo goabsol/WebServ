@@ -139,7 +139,6 @@ token_T lexer_get_token(lexer_T *lexer)
 	while (lexer->c != '\0')
 	{
 		lexer_skip_whitespace(lexer);
-		std::cout << lexer->c << std::endl;
 		if (lexer->i >= lexer->src_size || lexer->c == '\0')
 		{
 			if (lexer->depth != 0 || (lexer->last_type != SEMICOLON && lexer->last_type != RIGHTBRACE))
@@ -172,7 +171,6 @@ token_T lexer_get_token(lexer_T *lexer)
 				print_and_exit("Error : invalid closing bracket", lexer->line);
 			}
 			lexer->last_type = RIGHTBRACE;
-			std::cout << "line :" << 	lexer->line << std::endl;
 			lexer->depth--;
 			return lexer_advance_current(lexer, RIGHTBRACE);
 		}

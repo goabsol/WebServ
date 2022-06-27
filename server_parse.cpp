@@ -1,5 +1,5 @@
 #include "server_parse.hpp"
-
+#include "cmath"
 bool digits_and_colons(std::string &value)
 {
 	for (size_t i = 0; i < value.size(); i++)
@@ -31,6 +31,17 @@ std::vector<std::string> split(std::string &value, char c)
 			j = value.size();
 		result.push_back(value.substr(i, j - i));
 		i = j + 1;
+	}
+	return result;
+}
+
+long ipv4_to_long(std::string &value)
+{
+	long result = 0;
+	std::vector<std::string> tokens = split(value, '.');
+	for (size_t i = 0; i < tokens.size(); i++)
+	{
+		result += std::stol(tokens[i]) * pow(256, 3 - i);
 	}
 	return result;
 }
@@ -107,15 +118,34 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i)
 			else if (tokens[i].value == "listen")
 			{
 				i++;
-				if (isnumber(tokens[i].value))
+				while(tokens[i].type == VALUE)
 				{
-					this->ports.push_back(tokens[i].value);
+					std::vector<std::string> addr = split(tokens[i].value, ':');
+					if (addr.size() == 1)
+					{
+						if (!isnumber(addr[0]))
+						{
+							print_and_exit("Error: port must be an integer", tokens[i].line);
+						}
+						this->ports.push_back(std::make_pair(0,std::stoi(addr[0])));
+					}
+					else if (addr.size() == 2)
+					{
+						valid_ipv4(addr[0], tokens[i].line);
+						if (!isnumber(addr[1]))
+						{
+							print_and_exit("Error: port must be an integer", tokens[i].line);
+						}
+						long ip_long = ipv4_to_long(addr[0]);
+						this->ports.push_back(std::make_pair(ip_long, stol(addr[1])));
+					}
+					else
+					{
+						print_and_exit("Error: invalid listen", tokens[i].line);
+					}
+					i++;
 				}
-				else
-				{
-					valid_ipv4(tokens[i].value, tokens[i].line);
-					this->ipv4.push_back(tokens[i].value);
-				}
+				
 			}
 			else if (tokens[i].value == "server_name")
 			{
@@ -164,6 +194,10 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i)
 	}
 }
 
+Server_T::Server_T() : root("/"), body_size_limit(0), autoindex(true)
+{
+}
+
 Server_T::Server_T(const Server_T& server)
 {
 	this->root = server.root;
@@ -172,7 +206,6 @@ Server_T::Server_T(const Server_T& server)
 	this->index = server.index;
 	this->error_pages = server.error_pages;
 	this->ports = server.ports;
-	this->ipv4 = server.ipv4;
 	this->server_name = server.server_name;
 	this->cgi = server.cgi;
 	this->autoindex = server.autoindex;
@@ -186,11 +219,24 @@ Server_T& Server_T::operator=(const Server_T& server)
 	this->allowed_methods = server.allowed_methods;
 	this->index = server.index;
 	this->error_pages = server.error_pages;
-	this->ports = server.ports;
-	this->ipv4 = server.ipv4;
 	this->server_name = server.server_name;
 	this->cgi = server.cgi;
 	this->autoindex = server.autoindex;
 	this->locations = server.locations;
+	this->ports = server.ports;
 	return *this;
+}
+
+Server_T::~Server_T()
+{
+	this->root = "";
+	this->body_size_limit = 0;
+	this->allowed_methods.clear();
+	this->index.clear();
+	this->error_pages.clear();
+	this->server_name.clear();
+	this->cgi.clear();
+	this->autoindex = false;
+	this->locations.clear();
+	this->ports.clear();
 }

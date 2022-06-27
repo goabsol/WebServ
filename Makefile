@@ -19,7 +19,7 @@ OBJ  = $(SRC:%.cpp=%.o)
 
 HDR  = $(SRC:%.cpp=%.h)
 
-FLG  = -fsanitize=address -g
+FLG  = -fsanitize=address -g3
 
 all : $(NAME)
 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webserv.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
+/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/25 10:16:14 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/26 10:46:48 by ael-bagh         ###   ########.fr       */
+/*   Updated: 2022/06/27 09:14:54 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,10 +23,11 @@ int main(int ac, char **av)
 	const int enable = 1;
 	fd_set read_fd;
 	FD_ZERO(&read_fd);
+	std::map<SOCKET, Server_T> m_socket_to_server;
 	//create socket for each port
-	for (size_t i = 0; i < servers.size(); i++)
+	for (size_t i = 0; i < parser.servers.size(); i++)
 	{
-		for (size_t j = 0; j < servers[i].port.size(); j++)
+		for (size_t j = 0; j < parser.servers[i].ports.size(); j++)
 		{
 			server_fd = socket(AF_INET, SOCK_STREAM, 0);
 			if (server_fd < 0)
@@ -39,8 +40,8 @@ int main(int ac, char **av)
 				std::cout << "setsockopt(SO_REUSEADDR) failed" << std::endl;
 			memeset(&johnny, 0, sizeof(johnny));
 			johnny.sin_family = AF_INET;
-			johnny.sin_port = htons(servers[i].port[j].second);
-			johnny.sin_addr.s_addr = htonl(servers[i].port[j].first);
+			johnny.sin_port = htons(parser.servers[i].ports[j].second);
+			johnny.sin_addr.s_addr = INADDR_ANY/*htonl(parser.servers[i].ports[j].first)*/;
 			//bind socket to port
 			if (bind(server_fd, (struct sockaddr *)&johnny, sizeof(johnny)) < 0)
 			{
@@ -58,7 +59,7 @@ int main(int ac, char **av)
 			if (server_fd > max_fd)
 				max_fd = server_fd;
 			//store (socket, server) in map
-			m_socket_to_server[server_fd] = servers[i];
+			m_socket_to_server[server_fd] = parser.servers[i];
 		}
 	}
 	//safekeeping server sockets in master
@@ -126,7 +127,7 @@ int main(int ac, char **av)
 			}
 			else if (FD_ISSET(i, &write_fd)) //if socket is ready to write, send response
 			{
-				std::cout << "Socket " << i << " of " << m_socket_to_server[i].name << " is ready for writing" << std::endl;
+				// std::cout << "Socket " << i << " of " << m_socket_to_server[i].name << " is ready for writing" << std::endl;
 				std::string hello = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!";
 				send(i,hello.c_str(),hello.length(),0);
 				std::cout << "Data sent" << std::endl;
