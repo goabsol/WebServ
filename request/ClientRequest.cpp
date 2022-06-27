@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ClientRequest.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
+/*   By: anaselbaghdadi <anaselbaghdadi@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/26 10:47:42 by ael-bagh         ###   ########.fr       */
+/*   Updated: 2022/06/27 13:12:49 by anaselbaghd      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,14 +151,17 @@ void ClientRequest::checkLineValidity(std::string line)
 			this->method = requestline[0];
 		}
 		this->requestURI = requestline[1];
-		this->httpVersion = requestline[2];
-		// {
-		// 	hasError = 1;
-		// 	errorMessage = "Error: Request method is wrong";
-		// 	return ;
-		// }
-		// im reading about what an URI should be like so meh
-		//if (requestline[1] )
+		if (requestline[2] != "HTTP/1.1")
+		{
+			this->hasError = true;
+			this->errorMessage = "Error: Request line HTTP version not valid";
+			return ;
+		}
+		else
+		{
+			this->httpVersion = requestline[2];
+		}
+		requestPosition = 2;
 	}
 	else if (requestPosition == 2)
 	{
