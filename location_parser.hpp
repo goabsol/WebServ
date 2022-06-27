@@ -6,7 +6,7 @@
 class Location_T
 {
 	public:
-		Location_T(std::vector<token_T> tokens, size_t &i);
+		Location_T(std::vector<token_T> &tokens, size_t &i);
 		Location_T();
 		Location_T(const Location_T& location);
 		Location_T& operator=(const Location_T& location);

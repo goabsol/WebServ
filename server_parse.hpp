@@ -20,7 +20,7 @@ class Server_T
 		std::string root;
 		std::vector<std::string> cgi;
 		std::vector<std::string> server_name;
-		std::vector<std::pair<long, long> >ports;
+		std::vector<std::pair<std::string, long> >ports;
 		std::map<std::string, Location_T> locations;
 		bool autoindex;
 };

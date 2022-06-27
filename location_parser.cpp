@@ -34,7 +34,7 @@ Location_T& Location_T::operator=(const Location_T& location)
 	return *this;
 }
 
-Location_T::Location_T(std::vector<token_T> tokens, size_t &i)
+Location_T::Location_T(std::vector<token_T> &tokens, size_t &i)
 {
 	i+=2;
 	while(tokens[i].type != RIGHTBRACE)
@@ -55,11 +55,11 @@ Location_T::Location_T(std::vector<token_T> tokens, size_t &i)
 				}
 				catch(const std::exception& e)
 				{
-					print_and_exit("Error: body_size_limit must be an integer", tokens[i].line);
+					print_and_exit(" body_size_limit must be an integer", tokens[i].line);
 				}
 				if (this->body_size_limit < 0)
 				{
-					print_and_exit("Error: body_size_limit must be positive", tokens[i].line);
+					print_and_exit(" body_size_limit must be positive", tokens[i].line);
 				}
 			}
 			else if (tokens[i].value == "allowed_methods")
@@ -96,17 +96,17 @@ Location_T::Location_T(std::vector<token_T> tokens, size_t &i)
 				else if (tokens[i].value == "off")
 					this->autoindex = false;
 				else
-					print_and_exit("Error: autoindex must be on or off", tokens[i].line);
+					print_and_exit(" autoindex must be on or off", tokens[i].line);
 			}
 		}
 		else if (tokens[i].type == LOCATION)
 		{
-			print_and_exit("Error: cannot have nested locations", tokens[i].line);
+			print_and_exit(" cannot have nested locations", tokens[i].line);
 
 		}
 		else if (tokens[i].type == VALUE)
 		{
-			print_and_exit("Error: invalid token", tokens[i].line);
+			print_and_exit(" invalid token", tokens[i].line);
 		}
 		i++;
 	}

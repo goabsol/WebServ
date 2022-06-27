@@ -17,6 +17,7 @@ int main(int ac, char **av)
 {
 	//dummy servers
 	parser_T parser = parse_file(ac, av);
+	std::cout << parser.error_pages[404] << std::endl;
     struct sockaddr_in johnny; 
     SOCKET server_fd;
 	SOCKET max_fd = 0;
@@ -40,18 +41,20 @@ int main(int ac, char **av)
 				std::cout << "setsockopt(SO_REUSEADDR) failed" << std::endl;
 			memeset(&johnny, 0, sizeof(johnny));
 			johnny.sin_family = AF_INET;
+			std::cout << parser.servers[i].ports[j].second << " " << parser.servers[i].ports[j].first << std::endl;
 			johnny.sin_port = htons(parser.servers[i].ports[j].second);
-			johnny.sin_addr.s_addr = INADDR_ANY/*htonl(parser.servers[i].ports[j].first)*/;
+			johnny.sin_addr.s_addr = inet_addr(parser.servers[i].ports[j].first.c_str());
 			//bind socket to port
 			if (bind(server_fd, (struct sockaddr *)&johnny, sizeof(johnny)) < 0)
 			{
-				std::cout << "Error binding socket" << std::endl;
+				std::cerr << strerror(errno) << std::endl;
+				std::cerr << "Error binding socket" << std::endl;
 				return 1;
 			}
 			//listen for connections
 			if (listen(server_fd, 5) < 0)
 			{
-				std::cout << "Error listening on socket" << std::endl;
+				std::cerr << "Error listening on socket" << std::endl;
 				return 1;
 			}
 			//add socket to read_fd
@@ -75,7 +78,7 @@ int main(int ac, char **av)
 		//selecting sockets to read/write (multiplexing)
 		if (select(max_fd + 1, &rcopy, &wcopy, NULL, NULL) < 0)
 		{
-			std::cout << "Error in select" << std::endl;
+			std::cerr << "Error in select" << std::endl;
 			return 1;
 		}
 		for (int i = 1; i <= max_fd; i++)
@@ -91,7 +94,7 @@ int main(int ac, char **av)
 					SOCKET client_fd = accept(i, (struct sockaddr *)&client_addr, &client_addr_len);
 					if (client_fd < 0)
 					{
-						std::cout << "Error accepting connection" << std::endl;
+						std::cerr << "Error accepting connection" << std::endl;
 						return 1;
 					}
 					if (setsockopt(client_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
