@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/09 07:33:11 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/12 12:28:33 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/06/27 09:19:52 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,11 +20,6 @@
 #include <sys/event.h>
 #include <sys/time.h>
 #include <fcntl.h>
+#include "tools.hpp"
 
-namespace ws
-{
-	class Socket
-	{
-		
-	};
-}
+

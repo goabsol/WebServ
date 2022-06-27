@@ -194,6 +194,10 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i)
 	}
 }
 
+Server_T::Server_T() : root("/"), body_size_limit(0), autoindex(true)
+{
+}
+
 Server_T::Server_T(const Server_T& server)
 {
 	this->root = server.root;
@@ -221,4 +225,18 @@ Server_T& Server_T::operator=(const Server_T& server)
 	this->locations = server.locations;
 	this->ports = server.ports;
 	return *this;
+}
+
+Server_T::~Server_T()
+{
+	this->root = "";
+	this->body_size_limit = 0;
+	this->allowed_methods.clear();
+	this->index.clear();
+	this->error_pages.clear();
+	this->server_name.clear();
+	this->cgi.clear();
+	this->autoindex = false;
+	this->locations.clear();
+	this->ports.clear();
 }
