@@ -15,27 +15,39 @@ parser_T::parser_T(std::vector<token_T> tokens)
 			if (tokens[i].value == "root")
 			{
 				i++;
+				if (this->root != "")
+				{
+					print_and_exit("root already defined", tokens[i].line);
+				}
 				this->root = tokens[i].value;
 			}
 			else if (tokens[i].value == "body_size_limit")
 			{
 				i++;
+				if (this->body_size_limit != 0)
+				{
+					print_and_exit("body_size_limit already defined", tokens[i].line);
+				}
 				try
 				{
 						this->body_size_limit = std::stoi(tokens[i].value);
 				}
 				catch(const std::exception& e)
 				{
-					print_and_exit("Error: body_size_limit must be an integer", tokens[i].line);
+					print_and_exit(" body_size_limit must be an integer", tokens[i].line);
 				}
 				if (this->body_size_limit < 0)
 				{
-					print_and_exit("Error: body_size_limit must be positive", tokens[i].line);
+					print_and_exit(" body_size_limit must be positive", tokens[i].line);
 				}
 			}
 			else if (tokens[i].value == "allowed_methods")
 			{
 				i++;
+				if (this->allowed_methods.size() != 0)
+				{
+					print_and_exit("allowed_methods already defined", tokens[i].line);
+				}
 				while(tokens[i].type != SEMICOLON)
 				{
 					this->allowed_methods.push_back(tokens[i].value);
@@ -44,6 +56,10 @@ parser_T::parser_T(std::vector<token_T> tokens)
 			}
 			else if (tokens[i].value == "index")
 			{
+				if (this->index.size() != 0)
+				{
+					print_and_exit("index already defined", tokens[i].line);
+				}
 				while(tokens[i].type != SEMICOLON)
 				{
 					i++;
@@ -56,7 +72,7 @@ parser_T::parser_T(std::vector<token_T> tokens)
 			}
 			else
 			{
-				print_and_exit("Error: unknown token: " + tokens[i].value, tokens[i].line);
+				print_and_exit(" unknown token: " + tokens[i].value, tokens[i].line);
 			}
 		}
 		else if (tokens[i].type == SERVER)

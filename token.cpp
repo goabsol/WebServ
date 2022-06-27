@@ -51,20 +51,20 @@ std::pair<int,std::string> parse_error_page(std::vector<token_T> tokens,  size_t
 	std::string page;
 	i++;
 	try {
-	code = std::stoi(tokens[i].value);
+		code = std::stoi(tokens[i].value);
 	}
 	catch (const std::exception& e)
 	{
-		print_and_exit("Error: error_pages must be an integer", tokens[i].line);
+		print_and_exit(" error_pages must be an integer", tokens[i].line);
 	}
 	if (code < 0 || code > 599)
 	{
-		print_and_exit("Error: error_pages must be between 0 and 599", tokens[i].line);
+		print_and_exit(" error_pages must be between 0 and 599", tokens[i].line);
 	}
 	i++;
 	if (tokens[i].type != VALUE)
 	{
-		print_and_exit("Error: error_page code must be followed by a page name", tokens[i].line);
+		print_and_exit(" error_page code must be followed by a page name", tokens[i].line);
 	}
 	page = tokens[i].value;
 	return (std::make_pair(code, page));

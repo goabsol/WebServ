@@ -19,6 +19,12 @@ parser_T parse_file(int ac, char **av)
 	if (ac != 2)
 	{
 		std::cerr << "Usage : ./webserv <config_file>" << std::endl;
+		exit(1);
+	}
+	if ((std::string(av[1]).substr(std::string(av[1]).find_last_of(".") + 1) != "conf"))
+	{
+		std::cerr << "Configuration file extension should be .conf" << std::endl;
+		exit(1);
 	}
 	std::ifstream file(av[1]);
 	if (!file.is_open())

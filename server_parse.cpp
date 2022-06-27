@@ -50,18 +50,18 @@ void valid_ipv4(std::string &value, int line)
 {
 	if (!digits_and_colons(value))
 	{
-		print_and_exit("Error : invalid ipv4", line);
+		print_and_exit("invalid ipv4", line);
 	}
 	std::vector<std::string> parts = split(value, '.');
 	if (parts.size() != 4)
 	{
-		print_and_exit("Error : invalid ipv4", line);
+		print_and_exit("invalid ipv4", line);
 	}
 	for (int i = 0; i < 4; i++)
 	{
 		if (stoi(parts[i]) > 255 || stoi(parts[i]) < 0)
 		{
-			print_and_exit("Error : invalid ipv4", line);
+			print_and_exit("invalid ipv4", line);
 		}
 	}
 }
@@ -87,11 +87,11 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i)
 				}
 				catch(const std::exception& e)
 				{
-					print_and_exit("Error: body_size_limit must be an integer", tokens[i].line);
+					print_and_exit(" body_size_limit must be an integer", tokens[i].line);
 				}
 				if (this->body_size_limit < 0)
 				{
-					print_and_exit("Error: body_size_limit must be positive", tokens[i].line);
+					print_and_exit(" body_size_limit must be positive", tokens[i].line);
 				}
 			}
 			else if (tokens[i].value == "allowed_methods")
@@ -125,23 +125,22 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i)
 					{
 						if (!isnumber(addr[0]))
 						{
-							print_and_exit("Error: port must be an integer", tokens[i].line);
+							print_and_exit(" port must be an integer", tokens[i].line);
 						}
-						this->ports.push_back(std::make_pair(0,std::stoi(addr[0])));
+						this->ports.push_back(std::make_pair("0.0.0.0",std::stoi(addr[0])));
 					}
 					else if (addr.size() == 2)
 					{
 						valid_ipv4(addr[0], tokens[i].line);
 						if (!isnumber(addr[1]))
 						{
-							print_and_exit("Error: port must be an integer", tokens[i].line);
+							print_and_exit(" port must be an integer", tokens[i].line);
 						}
-						long ip_long = ipv4_to_long(addr[0]);
-						this->ports.push_back(std::make_pair(ip_long, stol(addr[1])));
+						this->ports.push_back(std::make_pair(addr[0], stol(addr[1])));
 					}
 					else
 					{
-						print_and_exit("Error: invalid listen", tokens[i].line);
+						print_and_exit(" invalid listen", tokens[i].line);
 					}
 					i++;
 				}
@@ -173,7 +172,7 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i)
 				else if (tokens[i].value == "off")
 					this->autoindex = false;
 				else
-					print_and_exit("Error: autoindex must be on or off", tokens[i].line);
+					print_and_exit(" autoindex must be on or off", tokens[i].line);
 			}
 		}
 		else if (tokens[i].type == LOCATION)
@@ -182,13 +181,13 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i)
 			std::string location_match = tokens[i].value;
 			if (locations.find(location_match) != locations.end())
 			{
-				print_and_exit("Error: location already defined", tokens[i].line);
+				print_and_exit(" location already defined", tokens[i].line);
 			}
 			this->locations.insert(std::make_pair(location_match, Location_T(tokens, i)));
 		}
 		else if (tokens[i].type == VALUE)
 		{
-			print_and_exit("Error: invalid token", tokens[i].line);
+			print_and_exit(" invalid token", tokens[i].line);
 		}
 		i++;
 	}

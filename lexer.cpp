@@ -114,20 +114,20 @@ token_T lexer_parse_id(lexer_T *lexer)
 	if (value == "server")
 	{
 		if (lexer->depth != 0)
-			print_and_exit("Error : server is not allowed inside another server", lexer->line);
+			print_and_exit("server is not allowed inside another server", lexer->line);
 		lexer->last_type = SERVER;
 		return token_T(value, SERVER, lexer->line);
 	}
 	else if (value == "location")
 	{
 		if (lexer->depth == 0)
-			print_and_exit("Error : location is not allowed outside of a server", lexer->line);
+			print_and_exit("location is not allowed outside of a server", lexer->line);
 		lexer->last_type = LOCATION;
 		return token_T(value, LOCATION, lexer->line);
 	}
 	if (!valid_id(value))
 	{
-		print_and_exit("Error : invalid id", lexer->line);
+		print_and_exit("invalid id", lexer->line);
 	}
 	lexer->last_type = ID;
 	return token_T(value, ID, lexer->line);
@@ -142,7 +142,7 @@ token_T lexer_get_token(lexer_T *lexer)
 		if (lexer->i >= lexer->src_size || lexer->c == '\0')
 		{
 			if (lexer->depth != 0 || (lexer->last_type != SEMICOLON && lexer->last_type != RIGHTBRACE))
-				print_and_exit("Error : missing closing bracket", lexer->line - 1);
+				print_and_exit("missing closing bracket", lexer->line - 1);
 			return token_T("", END_OF_FILE, lexer->line);
 		}
 		if (valid_string(lexer->c))
@@ -158,7 +158,7 @@ token_T lexer_get_token(lexer_T *lexer)
 			{
 				if (lexer->last_type == LOCATION)
 					print_and_exit("Error: location needs a path. Use / to match all paths", lexer->line);
-				print_and_exit("Error : only a Server or a Location can have an opening bracket.", lexer->line);
+				print_and_exit("only a Server or a Location can have an opening bracket.", lexer->line);
 			}
 			lexer->last_type = LEFTBRACE;
 			lexer->depth++;
@@ -168,7 +168,7 @@ token_T lexer_get_token(lexer_T *lexer)
 		{
 			if (lexer->depth == 0 || (lexer->last_type != SEMICOLON && lexer->last_type != RIGHTBRACE))
 			{
-				print_and_exit("Error : invalid closing bracket", lexer->line);
+				print_and_exit("invalid closing bracket", lexer->line);
 			}
 			lexer->last_type = RIGHTBRACE;
 			lexer->depth--;
@@ -178,7 +178,7 @@ token_T lexer_get_token(lexer_T *lexer)
 		{
 			if (lexer->last_type != VALUE && (lexer->last_type == ID || lexer->last_type == SERVER || lexer->last_type == LOCATION || lexer->last_type == LOCATION_MATCH))
 			{
-				print_and_exit("Error : Expected valid expression before semicolon.", lexer->line);
+				print_and_exit("Expected valid expression before semicolon.", lexer->line);
 			}
 			lexer->last_type = SEMICOLON;
 			return lexer_advance_current(lexer, SEMICOLON);
@@ -196,7 +196,7 @@ token_T lexer_get_token(lexer_T *lexer)
 		}
 	}
 	if (lexer->depth != 0 || (lexer->last_type != SEMICOLON && lexer->last_type != RIGHTBRACE))
-		print_and_exit("Error : missing closing bracket", lexer->line);
+		print_and_exit("missing closing bracket", lexer->line);
 	return token_T(0, END_OF_FILE, lexer->line);
 }
 
