@@ -3,6 +3,8 @@
 #include "lexer.hpp"
 #include "server_parse.hpp"
 
+class Server_T;
+
 class parser_T
 {
 	public:
@@ -17,7 +19,13 @@ class parser_T
 		int body_size_limit;
 		std::string root;
 		std::vector<Server_T> servers;
-};
+		bool autoindex;
 
+		bool allowed_methods_set;
+		bool index_set;
+		bool body_size_limit_set;
+		bool root_set;
+		bool autoindex_set;
+};
 
 parser_T parse_file(int ac, char **av);

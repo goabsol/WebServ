@@ -6,7 +6,5 @@ test_parsing.conf
 a.out.dSYM
 nginx.conf
 tofix
-*.o
 webserv
-.DS_Store
-file.conf
+*.o

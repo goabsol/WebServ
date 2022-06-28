@@ -2,11 +2,14 @@
 
 #include "token.hpp"
 #include "tools.hpp"
+#include "server_parse.hpp"
+
+class Server_T;
 
 class Location_T
 {
 	public:
-		Location_T(std::vector<token_T> &tokens, size_t &i);
+		Location_T(std::vector<token_T> &tokens, size_t &i, Server_T *server);
 		Location_T();
 		Location_T(const Location_T& location);
 		Location_T& operator=(const Location_T& location);
@@ -18,4 +21,11 @@ class Location_T
 		bool autoindex;
 		std::string upload_store;
 		std::map<std::string, Location_T> locations;
+
+		bool autoindex_set;
+		bool upload_store_set;
+		bool body_size_limit_set;
+		bool allowed_methods_set;
+		bool root_set;
+		bool index_set;
 };
