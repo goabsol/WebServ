@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   webserv.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
+/*   By: anaselbaghdadi <anaselbaghdadi@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/25 10:16:14 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/27 09:14:54 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/06/27 14:15:02 by anaselbaghd      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,7 +108,7 @@ int main(int ac, char **av)
 				if (clients.find(i) == clients.end())
 				{
 					clients[i] = ClientRequest(i);
-					std::cout << i  << " fxfcv " << clients[i].getSocket() << std::endl;
+					//std::cout << i  << " fxfcv " << clients[i].getSocket() << std::endl;
 				}
 				////////////////////////////////////////////////////////////////////
 				if (!clients[i].getIsDone())
@@ -123,7 +123,7 @@ int main(int ac, char **av)
 				}
 				else if (clients[i].getIsDone())
 				{
-					std::cout << "Data: " << clients[i].getData() << std::endl;
+					std::cout << "Data: " << i << " " << clients[i].getData() << std::endl;
 					FD_CLR(i, &read_fd);
 					FD_SET(i, &write_fd);
 				}
@@ -137,6 +137,7 @@ int main(int ac, char **av)
 				//remove socket from write_fd and add to read_fd
 				FD_CLR(i, &write_fd);
 				FD_SET(i, &read_fd);
+				clients[i].setIsDone(false);
 			}
 		}
 	}
