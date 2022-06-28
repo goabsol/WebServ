@@ -6,7 +6,7 @@
 /*   By: anaselbaghdadi <anaselbaghdadi@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/27 17:11:35 by anaselbaghd      ###   ########.fr       */
+/*   Updated: 2022/06/28 19:36:18 by anaselbaghd      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -111,6 +111,7 @@ void ClientRequest::setIsDone(bool isDone)
 {
 	this->isDone = isDone;
 	this->requestPosition = 0;
+	this->data.clear();
 }
 /* ************************************************************************** */
 
@@ -132,15 +133,27 @@ void ClientRequest::parseRequest()
 		if (this->requestPosition == 2 && this->data.find("\r\n")==0)
 		{
 			this->requestPosition = 3;
-			if (requestFields.find("Content-Length") == requestFields.end()
-			&& requestFields.find("Transfer-Encoding") == requestFields.end() )
+			std::map<std::string, std::string>::iterator contentLength = requestFields.find("Content-Length");
+			//std::map<std::string, std::string>::iterator transferEncoding = requestFields.find("Transfer-Encoding");
+			if (contentLength != requestFields.end())
 			{
-				this->isDone = true;
-			}
-			//std::cout << "hi I happen" << std::endl;
-			//this->data.clear();
+				std::cout << this->data << " ------l-o" << std::endl;
+				size_t length = std::stoi(contentLength->second);
+				char *buff = new char[length];
+				size_t bytes_read = recv(Socket, buff, length, 0);
+				std::cout << bytes_read << std::endl;
+				if (bytes_read > 0)
+				{
+					this->body += std::string(buff, buff + length);
+					this->setIsDone(true);
+				}
+				else
+				{
+					this->hasError = true;
+					this->errorMessage = "Error: recv() failed";
+				}
+			}	
 		}
-		
 	}
 }
 
@@ -188,7 +201,6 @@ void ClientRequest::checkLineValidity(std::string line)
 	}
 	else
 	{
-		
 		if (requestFields.find("Content-Length") != requestFields.end())
 		{
 			this->data = this->data.substr(this->data.find("\r\n") + 2);
@@ -196,6 +208,7 @@ void ClientRequest::checkLineValidity(std::string line)
 			{
 				this->hasError = true;
 				//error here
+				
 				return ;
 			}
 			this->body = this->data.substr(0, std::stoi(requestFields["Content-Length"]));
@@ -210,26 +223,27 @@ void ClientRequest::checkLineValidity(std::string line)
 
 void ClientRequest::storeRequest()
 {
-	char *buffer;
+	char *buffer = new char[1];
 	memeset(buffer, 0, 1);
-    int bytes_read;
+    size_t bytes_read = 0;
     std::vector<std::string> lines;
-    bytes_read = recv(this->Socket, buffer, 1, 0);
+    bytes_read = recv(this->Socket, buffer, 1, 0); 
 	if (bytes_read > 0)
 	{
-		this->data += std::string(buffer);;
+		this->data += *buffer;
 	}
 	else
 	{
 		this->hasError = true;
 		this->errorMessage = "Error: recv() failed";
+
+		// 
 	}
-    if (this->data.find("\r\n\r\n") != std::string::npos
-	&& this->data.substr(this->data.find("\r\n\r\n") + 4).find("\r\n\r\n") != std::string::npos)
+    if (this->data.find("\r\n\r\n") != std::string::npos)
     {
 		std::cout << "found" << std::endl;
-		std::cout << this->data << std::endl;
 		this->parseRequest();
+		std::cout << this->data << std::endl;
     }
-	std::cout << this->data << std::endl;
+	// std::cout << this->data << std::endl
 }

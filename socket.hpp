@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   socket.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
+/*   By: anaselbaghdadi <anaselbaghdadi@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/09 07:33:11 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/27 09:19:52 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/06/28 19:44:00 by anaselbaghd      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,5 +21,10 @@
 #include <sys/time.h>
 #include <fcntl.h>
 #include "tools.hpp"
+#include "conf_file.hpp"
+#include "./request/ClientRequest.hpp"
+#define SOCKET int
+
+int sockinit(parser_T);
 
 
