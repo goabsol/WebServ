@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ClientRequest.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anaselbaghdadi <anaselbaghdadi@student.    +#+  +:+       +#+        */
+/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/28 19:36:18 by anaselbaghd      ###   ########.fr       */
+/*   Updated: 2022/06/29 13:12:32 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ ClientRequest::ClientRequest( const ClientRequest & src )
 {
 }
 
-ClientRequest::ClientRequest(int socket) : Socket(socket), data(""), requestPosition(0), hasError(false), isDone(false)
+ClientRequest::ClientRequest(int socket) : Socket(socket), data(""), requestPosition(0), hasError(false), isDone(false), closeConnection(false)
 {
 }
 
@@ -66,6 +66,7 @@ ClientRequest &				ClientRequest::operator=( ClientRequest const & rhs )
 		this->errorMessage = rhs.errorMessage;
 		this->requestPosition = rhs.requestPosition;
 		this->isDone = rhs.isDone;
+		this->closeConnection = rhs.closeConnection;
 	}
 	return *this;
 }
@@ -107,54 +108,63 @@ bool ClientRequest::getIsDone()
 	return this->isDone;
 }
 
+bool ClientRequest::getConnectionClosed()
+{
+	return this->closeConnection;
+}
+
 void ClientRequest::setIsDone(bool isDone)
 {
 	this->isDone = isDone;
 	this->requestPosition = 0;
-	this->data.clear();
 }
 /* ************************************************************************** */
 
-void ClientRequest::parseRequest()
+void ClientRequest::parseRequest(std::string &line)
 {
-	std::string line;
+	//need to redo this loop
+	std::cout << ":" << line << ":"<< std::endl;
 	
-	while(this->data.find("\r\n\r\n") != std::string::npos)
-	{
-		if (this->data.find("\r\n") != std::string::npos)
-		{
-			if (this->requestPosition < 2)
-				this->requestPosition++;
-			line = this->data.substr(0, this->data.find("\r\n"));
-			this->checkLineValidity(line);
-		}
-		this->data = this->data.substr(this->data.find("\r\n") + 2);
-		//parse the line
-		if (this->requestPosition == 2 && this->data.find("\r\n")==0)
-		{
-			this->requestPosition = 3;
-			std::map<std::string, std::string>::iterator contentLength = requestFields.find("Content-Length");
-			//std::map<std::string, std::string>::iterator transferEncoding = requestFields.find("Transfer-Encoding");
-			if (contentLength != requestFields.end())
-			{
-				std::cout << this->data << " ------l-o" << std::endl;
-				size_t length = std::stoi(contentLength->second);
-				char *buff = new char[length];
-				size_t bytes_read = recv(Socket, buff, length, 0);
-				std::cout << bytes_read << std::endl;
-				if (bytes_read > 0)
-				{
-					this->body += std::string(buff, buff + length);
-					this->setIsDone(true);
-				}
-				else
-				{
-					this->hasError = true;
-					this->errorMessage = "Error: recv() failed";
-				}
-			}	
-		}
-	}
+		// if (this->data.find("\r\n") != std::string::npos)
+		// {
+		// 	if (this->requestPosition < 2)
+		// 		this->requestPosition++;
+		// 	line = this->data.substr(0, this->data.find("\r\n"));
+		// 	this->checkLineValidity(line);
+		// }
+		// //parse the line
+		// if (this->requestPosition == 3 || (this->requestPosition == 2  && this->data.find("\r\n")==0))
+		// {
+		// 	this->requestPosition = 3;
+		// 	std::map<std::string, std::string>::iterator contentLength = requestFields.find("Content-Length");
+		// 	//std::map<std::string, std::string>::iterator transferEncoding = requestFields.find("Transfer-Encoding");
+		// 	if (contentLength != requestFields.end())
+		// 	{
+		// 		std::cout << this->data << " ------l-o" << std::endl;
+		// 		size_t length = std::stoi(contentLength->second);
+		// 		char *buff = new char[length];
+		// 		size_t bytes_read = recv(Socket, buff, length, 0);
+			// 	std::cout << bytes_read << std::endl;
+			// 	if (bytes_read > 0)
+			// 	{
+			// 		this->body += std::string(buff, buff + length);
+			// 		this->setIsDone(true);
+			// 	}
+			// 	else if(!bytes_read)
+			// 	{
+			// 		this->closeConnection = true;
+			// 	}
+			// 	else
+			// 	{
+			// 		this->hasError = true;
+			// 		this->errorMessage = "Error: recv() failed";
+			// 	}
+			// }
+			// else
+			// {
+			// 	this->setIsDone(true);
+			// }
+		// }
 }
 
 void ClientRequest::checkLineValidity(std::string line)
@@ -197,14 +207,14 @@ void ClientRequest::checkLineValidity(std::string line)
 		std::string p(strtok(l, ": "));
 		std::string v(strtok(NULL, ": "));
 		requestFields[p]= v;
-		std::cout << p << " : " << v << std::endl;
+		// std::cout << p << " : " << v << std::endl;
 	}
 	else
 	{
 		if (requestFields.find("Content-Length") != requestFields.end())
 		{
 			this->data = this->data.substr(this->data.find("\r\n") + 2);
-			if (this->data.length() != std::stoi(requestFields["Content-Length"]) + 4)
+			if (this->data.length() != std::stoi(requestFields["Content-Length"]))
 			{
 				this->hasError = true;
 				//error here
@@ -223,27 +233,44 @@ void ClientRequest::checkLineValidity(std::string line)
 
 void ClientRequest::storeRequest()
 {
-	char *buffer = new char[1];
-	memeset(buffer, 0, 1);
+	char *buffer = new char[1024];
+	memeset(buffer, 0, 1024);
     size_t bytes_read = 0;
     std::vector<std::string> lines;
-    bytes_read = recv(this->Socket, buffer, 1, 0); 
+    bytes_read = recv(this->Socket, buffer, 1024, 0); 
 	if (bytes_read > 0)
 	{
-		this->data += *buffer;
+		this->data += std::string(buffer, buffer + bytes_read);
+		if (this->requestPosition == 0)
+		{
+			trimwspace(this->data);
+		}
+	}
+	else if (bytes_read == 0)
+	{
+		this->closeConnection = true;
 	}
 	else
 	{
 		this->hasError = true;
 		this->errorMessage = "Error: recv() failed";
+		std::cout << "<-------->" << bytes_read << std::endl;
 
 		// 
 	}
-    if (this->data.find("\r\n\r\n") != std::string::npos)
+    while (this->data.find("\r\n") != std::string::npos)
     {
-		std::cout << "found" << std::endl;
-		this->parseRequest();
-		std::cout << this->data << std::endl;
+		std::string line = this->data.substr(0, this->data.find("\r\n"));
+		this->parseRequest(line);
+		try
+		{
+			this->data = this->data.substr(this->data.find("\r\n") + 2);
+		}
+		catch(std::exception e)
+		{
+			std::cout << "Error: " << e.what() << std::endl;
+		}
+		
     }
 	// std::cout << this->data << std::endl
 }

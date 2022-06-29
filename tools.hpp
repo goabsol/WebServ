@@ -36,3 +36,5 @@ void	print_and_exit(const std::string &msg, size_t line);
 std::vector<std::string> split(std::string &value, char c);
 
 bool validMethod(std::string &method);
+
+void trimwspace(std::string &str);

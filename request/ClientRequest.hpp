@@ -23,10 +23,11 @@ class ClientRequest
 		void setData(std::string line);
 		ClientRequest &	operator=( ClientRequest const & rhs );
 		void checkLineValidity(std::string line);
-		void parseRequest();
+		void parseRequest(std::string &line);
 		void storeRequest();
 		bool isValidURI(std::string &);
 		void setIsDone(bool);
+		bool getConnectionClosed();
 
 	private:
 		int Socket;
@@ -41,6 +42,7 @@ class ClientRequest
 		std::string errorMessage;
 		int requestPosition;
 		bool isDone;
+		bool closeConnection;
 };
 
 std::ostream &			operator<<( std::ostream & o, ClientRequest const & i );
