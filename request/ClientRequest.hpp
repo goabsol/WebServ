@@ -23,7 +23,7 @@ class ClientRequest
 		void setData(std::string line);
 		ClientRequest &	operator=( ClientRequest const & rhs );
 		void checkLineValidity(std::string line);
-		void parseRequest();
+		void parseRequest(std::string &line);
 		void storeRequest();
 		bool isValidURI(std::string &);
 		void setIsDone(bool);
