@@ -27,6 +27,7 @@ class ClientRequest
 		void storeRequest();
 		bool isValidURI(std::string &);
 		void setIsDone(bool);
+		bool getConnectionClosed();
 
 	private:
 		int Socket;
@@ -41,6 +42,7 @@ class ClientRequest
 		std::string errorMessage;
 		int requestPosition;
 		bool isDone;
+		bool closeConnection;
 };
 
 std::ostream &			operator<<( std::ostream & o, ClientRequest const & i );

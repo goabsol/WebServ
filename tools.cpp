@@ -9,6 +9,13 @@ void	print_and_exit(const std::string &msg, size_t line)
 	exit(1);
 }
 
+void trimwspace(std::string &str)
+{
+	while(str.size() > 0 && std::iswspace(str[0]))
+		str.erase(0, 1);
+	std::cout << "hihihihihihihi" << std::endl;
+}
+
 std::vector<std::string> split_white_space(std::string &line)
 {
 	std::vector<std::string> words;

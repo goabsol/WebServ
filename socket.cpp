@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anaselbaghdadi <anaselbaghdadi@student.    +#+  +:+       +#+        */
+/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/09 07:34:47 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/28 19:43:47 by anaselbaghd      ###   ########.fr       */
+/*   Updated: 2022/06/29 12:57:25 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,9 +119,9 @@ int    sockinit(parser_T parser)
 					}
 					////////////////////////////////////////////////////////////////////
 					// std::cout << client.getHasError() << " " << client.getIsDone() << std::endl;
-					if (clients[i].getHasError())
+					if (clients[i].getHasError() || clients[i].getConnectionClosed())
 					{
-						std::cout << clients[i].getError() << std::endl;
+						std::cout << (clients[i].getHasError()?clients[i].getError() : "Connection closed")  << std::endl;
 						FD_CLR(i, &read_fd);
 						FD_CLR(i, &write_fd);
 						close(i);

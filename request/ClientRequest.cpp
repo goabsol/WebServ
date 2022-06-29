@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ClientRequest.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anaselbaghdadi <anaselbaghdadi@student.    +#+  +:+       +#+        */
+/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/28 19:36:18 by anaselbaghd      ###   ########.fr       */
+/*   Updated: 2022/06/29 13:12:32 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ ClientRequest::ClientRequest( const ClientRequest & src )
 {
 }
 
-ClientRequest::ClientRequest(int socket) : Socket(socket), data(""), requestPosition(0), hasError(false), isDone(false)
+ClientRequest::ClientRequest(int socket) : Socket(socket), data(""), requestPosition(0), hasError(false), isDone(false), closeConnection(false)
 {
 }
 
@@ -66,6 +66,7 @@ ClientRequest &				ClientRequest::operator=( ClientRequest const & rhs )
 		this->errorMessage = rhs.errorMessage;
 		this->requestPosition = rhs.requestPosition;
 		this->isDone = rhs.isDone;
+		this->closeConnection = rhs.closeConnection;
 	}
 	return *this;
 }
@@ -107,18 +108,22 @@ bool ClientRequest::getIsDone()
 	return this->isDone;
 }
 
+bool ClientRequest::getConnectionClosed()
+{
+	return this->closeConnection;
+}
+
 void ClientRequest::setIsDone(bool isDone)
 {
 	this->isDone = isDone;
 	this->requestPosition = 0;
-	this->data.clear();
 }
 /* ************************************************************************** */
 
 void ClientRequest::parseRequest()
 {
 	std::string line;
-	
+	//need to redo this loop
 	while(this->data.find("\r\n\r\n") != std::string::npos)
 	{
 		if (this->data.find("\r\n") != std::string::npos)
@@ -130,7 +135,7 @@ void ClientRequest::parseRequest()
 		}
 		this->data = this->data.substr(this->data.find("\r\n") + 2);
 		//parse the line
-		if (this->requestPosition == 2 && this->data.find("\r\n")==0)
+		if (this->requestPosition == 3 || (this->requestPosition == 2  && this->data.find("\r\n")==0))
 		{
 			this->requestPosition = 3;
 			std::map<std::string, std::string>::iterator contentLength = requestFields.find("Content-Length");
@@ -147,12 +152,20 @@ void ClientRequest::parseRequest()
 					this->body += std::string(buff, buff + length);
 					this->setIsDone(true);
 				}
+				else if(!bytes_read)
+				{
+					this->closeConnection = true;
+				}
 				else
 				{
 					this->hasError = true;
 					this->errorMessage = "Error: recv() failed";
 				}
-			}	
+			}
+			else
+			{
+				this->setIsDone(true);
+			}
 		}
 	}
 }
@@ -197,14 +210,14 @@ void ClientRequest::checkLineValidity(std::string line)
 		std::string p(strtok(l, ": "));
 		std::string v(strtok(NULL, ": "));
 		requestFields[p]= v;
-		std::cout << p << " : " << v << std::endl;
+		// std::cout << p << " : " << v << std::endl;
 	}
 	else
 	{
 		if (requestFields.find("Content-Length") != requestFields.end())
 		{
 			this->data = this->data.substr(this->data.find("\r\n") + 2);
-			if (this->data.length() != std::stoi(requestFields["Content-Length"]) + 4)
+			if (this->data.length() != std::stoi(requestFields["Content-Length"]))
 			{
 				this->hasError = true;
 				//error here
@@ -231,19 +244,26 @@ void ClientRequest::storeRequest()
 	if (bytes_read > 0)
 	{
 		this->data += *buffer;
+		trimwspace(this->data);
+	}
+	else if (bytes_read == 0)
+	{
+		this->closeConnection = true;
 	}
 	else
 	{
 		this->hasError = true;
 		this->errorMessage = "Error: recv() failed";
+		std::cout << "<-------->" << bytes_read << std::endl;
 
 		// 
 	}
     if (this->data.find("\r\n\r\n") != std::string::npos)
     {
 		std::cout << "found" << std::endl;
+		std::cout <<"hi "<< this->data << " dibcidjb" << std::endl;
 		this->parseRequest();
-		std::cout << this->data << std::endl;
+		std::cout <<"hi "<< this->data << " dibcidjb" << std::endl;
     }
 	// std::cout << this->data << std::endl
 }
