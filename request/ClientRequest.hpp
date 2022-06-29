@@ -26,6 +26,7 @@ class ClientRequest
 		void parseRequest();
 		void storeRequest();
 		bool isValidURI(std::string &);
+		void setIsDone(bool);
 
 	private:
 		int Socket;

@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+         #
+#    By: anaselbaghdadi <anaselbaghdadi@student.    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/06/10 05:37:53 by arhallab          #+#    #+#              #
-#    Updated: 2022/06/26 10:40:15 by arhallab         ###   ########.fr        #
+#    Updated: 2022/06/28 16:19:22 by anaselbaghd      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -19,7 +19,7 @@ OBJ  = $(SRC:%.cpp=%.o)
 
 HDR  = $(SRC:%.cpp=%.h)
 
-FLG  = -fsanitize=address -g3
+FLG  = -fsanitize=address -g3 -std=c++98
 
 all : $(NAME)
 

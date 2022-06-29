@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ClientRequest.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
+/*   By: anaselbaghdadi <anaselbaghdadi@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/26 10:47:42 by ael-bagh         ###   ########.fr       */
+/*   Updated: 2022/06/28 19:36:18 by anaselbaghd      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,6 @@ ClientRequest::ClientRequest( const ClientRequest & src )
 
 ClientRequest::ClientRequest(int socket) : Socket(socket), data(""), requestPosition(0), hasError(false), isDone(false)
 {
-	std::cout << socket << " " << this->Socket << std::endl;
 }
 
 /*
@@ -108,6 +107,12 @@ bool ClientRequest::getIsDone()
 	return this->isDone;
 }
 
+void ClientRequest::setIsDone(bool isDone)
+{
+	this->isDone = isDone;
+	this->requestPosition = 0;
+	this->data.clear();
+}
 /* ************************************************************************** */
 
 void ClientRequest::parseRequest()
@@ -125,8 +130,31 @@ void ClientRequest::parseRequest()
 		}
 		this->data = this->data.substr(this->data.find("\r\n") + 2);
 		//parse the line
+		if (this->requestPosition == 2 && this->data.find("\r\n")==0)
+		{
+			this->requestPosition = 3;
+			std::map<std::string, std::string>::iterator contentLength = requestFields.find("Content-Length");
+			//std::map<std::string, std::string>::iterator transferEncoding = requestFields.find("Transfer-Encoding");
+			if (contentLength != requestFields.end())
+			{
+				std::cout << this->data << " ------l-o" << std::endl;
+				size_t length = std::stoi(contentLength->second);
+				char *buff = new char[length];
+				size_t bytes_read = recv(Socket, buff, length, 0);
+				std::cout << bytes_read << std::endl;
+				if (bytes_read > 0)
+				{
+					this->body += std::string(buff, buff + length);
+					this->setIsDone(true);
+				}
+				else
+				{
+					this->hasError = true;
+					this->errorMessage = "Error: recv() failed";
+				}
+			}	
+		}
 	}
-	this->requestPosition = 3;
 }
 
 void ClientRequest::checkLineValidity(std::string line)
@@ -151,52 +179,71 @@ void ClientRequest::checkLineValidity(std::string line)
 			this->method = requestline[0];
 		}
 		this->requestURI = requestline[1];
-		this->httpVersion = requestline[2];
-		// {
-		// 	hasError = 1;
-		// 	errorMessage = "Error: Request method is wrong";
-		// 	return ;
-		// }
-		// im reading about what an URI should be like so meh
-		//if (requestline[1] )
+		if (requestline[2] != "HTTP/1.1")
+		{
+			this->hasError = true;
+			this->errorMessage = "Error: Request line HTTP version not valid";
+			return ;
+		}
+		else
+		{
+			this->httpVersion = requestline[2];
+		}
+		requestPosition = 2;
 	}
 	else if (requestPosition == 2)
 	{
 		char *l = strdup(line.c_str());
 		std::string p(strtok(l, ": "));
-		std::string v(strtok(l, ": "));
+		std::string v(strtok(NULL, ": "));
 		requestFields[p]= v;
-		std::cout << p << " aha " << v << std::endl;
+		std::cout << p << " : " << v << std::endl;
 	}
 	else
 	{
-
+		if (requestFields.find("Content-Length") != requestFields.end())
+		{
+			this->data = this->data.substr(this->data.find("\r\n") + 2);
+			if (this->data.length() != std::stoi(requestFields["Content-Length"]) + 4)
+			{
+				this->hasError = true;
+				//error here
+				
+				return ;
+			}
+			this->body = this->data.substr(0, std::stoi(requestFields["Content-Length"]));
+		}
+		else
+		{
+			//To do: parse chunked;
+		}
 	}
 }
 
 
 void ClientRequest::storeRequest()
 {
-	char buffer[1024];
-	memeset(buffer, 0, 1024);
-    int bytes_read;
+	char *buffer = new char[1];
+	memeset(buffer, 0, 1);
+    size_t bytes_read = 0;
     std::vector<std::string> lines;
-    bytes_read = recv(this->Socket, buffer, 1024, 0);
-	std::cout << bytes_read << std::endl;
+    bytes_read = recv(this->Socket, buffer, 1, 0); 
 	if (bytes_read > 0)
 	{
-		this->data += std::string(buffer);
+		this->data += *buffer;
 	}
 	else
 	{
 		this->hasError = true;
 		this->errorMessage = "Error: recv() failed";
+
+		// 
 	}
-    if (this->data.find("\r\n") != std::string::npos)
+    if (this->data.find("\r\n\r\n") != std::string::npos)
     {
 		std::cout << "found" << std::endl;
 		this->parseRequest();
-		isDone = true;
+		std::cout << this->data << std::endl;
     }
-	std::cout << this->data << std::endl;
+	// std::cout << this->data << std::endl
 }
