@@ -13,7 +13,6 @@ void trimwspace(std::string &str)
 {
 	while(str.size() > 0 && std::iswspace(str[0]))
 		str.erase(0, 1);
-	std::cout << "hihihihihihihi" << std::endl;
 }
 
 std::vector<std::string> split_white_space(std::string &line)
