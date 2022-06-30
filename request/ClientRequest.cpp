@@ -126,7 +126,8 @@ void ClientRequest::parseRequest(std::string &line)
 	std::cout << "line: " << line << std::endl;
 	if (line == "")
 	{
-		this->requestPosition++;
+		this->requestPosition = 2;
+		line = this->data;
 	}
 	this->checkLineValidity(line);
 		// if (this->data.find("\r\n") != std::string::npos)
@@ -215,13 +216,21 @@ void ClientRequest::checkLineValidity(std::string line)
 	}
 	else
 	{
-		if (requestFields.find("Content-Length") != requestFields.end())
+		if (requestFields.find("Transfer-Encoding") != requestFields.end())
 		{
-			this->data = this->data.substr(this->data.find("\r\n") + 2);
+			
+			this->setIsDone(true);
+		}
+		else if (requestFields.find("Content-Length") != requestFields.end())
+		{
+			if (this->data.find("\r\n") != std::string::npos)
+			{
+				this->data = this->data.substr(this->data.find("\r\n") + 2);
+			}
 			this->body = this->data.substr(0, std::stoi(requestFields["Content-Length"]));
 			this->data = this->data.substr(std::stoi(requestFields["Content-Length"]));
 			this->setIsDone(true);
-			std::cout << "body : '" <<  this->body<< "'" << std::endl;
+			std::cout << "body : " << this->body << std::endl;
 		}
 		else
 		{
@@ -264,20 +273,27 @@ void ClientRequest::storeRequest()
 	}
     while (this->data.find("\r\n") != std::string::npos)
     {
-		std::string line = this->data.substr(0, this->data.find("\r\n"));
-		this->parseRequest(line);
+		std::string line;
+		if (this->data.find("\r\n") != std::string::npos)
+			line = this->data.substr(0, this->data.find("\r\n"));
+		else
+			line = this->data;
+		parseRequest(line);
 		try
 		{
-			this->data = this->data.substr(this->data.find("\r\n") + 2);
+			if (this->data.find("\r\n") != std::string::npos)
+			{
+				this->data = this->data.substr(this->data.find("\r\n") + 2);
+			}	
 		}
 		catch(std::exception e)
 		{
-			std::cerr << "Error: " << e.what() << std::endl;
+			std::cerr << "Error: " << this->data << std::endl;
+		}
 		}
 		if (this->hasError == true)
 		{
 			return ;
 		}
-    }
 	// std::cout << this->data << std::endl
 }
