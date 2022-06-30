@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/29 13:12:32 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/06/29 17:03:15 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,8 +123,12 @@ void ClientRequest::setIsDone(bool isDone)
 void ClientRequest::parseRequest(std::string &line)
 {
 	//need to redo this loop
-	std::cout << ":" << line << ":"<< std::endl;
-	
+	std::cout << "line: " << line << std::endl;
+	if (line == "")
+	{
+		this->requestPosition++;
+	}
+	this->checkLineValidity(line);
 		// if (this->data.find("\r\n") != std::string::npos)
 		// {
 		// 	if (this->requestPosition < 2)
@@ -169,16 +173,16 @@ void ClientRequest::parseRequest(std::string &line)
 
 void ClientRequest::checkLineValidity(std::string line)
 {
-	if (this->requestPosition == 1)
+	if (this->requestPosition == 0)
 	{
-		std::vector<std::string> requestline = split_white_space(line);
+		std::vector<std::string> requestline = split(line, ' ');
 		if (requestline.size() != 3 || countChr(line, ' ') != 2)
 		{
 			this->hasError = true;
 			this->errorMessage = "Error: Request line wrong number of parameters";
 			return ;
 		}
-		if (std::find(v_methods.begin(), v_methods.end(), requestline[0]) == v_methods.end())
+		if (!validMethod(requestline[0]))
 		{
 			this->hasError = true;
 			this->errorMessage = "Error: Request line method not valid";
@@ -199,9 +203,9 @@ void ClientRequest::checkLineValidity(std::string line)
 		{
 			this->httpVersion = requestline[2];
 		}
-		requestPosition = 2;
+		requestPosition = 1;
 	}
-	else if (requestPosition == 2)
+	else if (requestPosition == 1)
 	{
 		char *l = strdup(line.c_str());
 		std::string p(strtok(l, ": "));
@@ -214,18 +218,14 @@ void ClientRequest::checkLineValidity(std::string line)
 		if (requestFields.find("Content-Length") != requestFields.end())
 		{
 			this->data = this->data.substr(this->data.find("\r\n") + 2);
-			if (this->data.length() != std::stoi(requestFields["Content-Length"]))
-			{
-				this->hasError = true;
-				//error here
-				
-				return ;
-			}
 			this->body = this->data.substr(0, std::stoi(requestFields["Content-Length"]));
+			this->data = this->data.substr(std::stoi(requestFields["Content-Length"]));
+			this->setIsDone(true);
+			std::cout << "body : '" <<  this->body<< "'" << std::endl;
 		}
 		else
 		{
-			//To do: parse chunked;
+			this->setIsDone(true);
 		}
 	}
 }
@@ -233,6 +233,10 @@ void ClientRequest::checkLineValidity(std::string line)
 
 void ClientRequest::storeRequest()
 {
+	if (this->hasError == true)
+	{
+		return ;
+	}
 	char *buffer = new char[1024];
 	memeset(buffer, 0, 1024);
     size_t bytes_read = 0;
@@ -268,9 +272,12 @@ void ClientRequest::storeRequest()
 		}
 		catch(std::exception e)
 		{
-			std::cout << "Error: " << e.what() << std::endl;
+			std::cerr << "Error: " << e.what() << std::endl;
 		}
-		
+		if (this->hasError == true)
+		{
+			return ;
+		}
     }
 	// std::cout << this->data << std::endl
 }
