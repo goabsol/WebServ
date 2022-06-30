@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/29 17:03:15 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/06/30 18:16:51 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -216,26 +216,50 @@ void ClientRequest::checkLineValidity(std::string line)
 	}
 	else
 	{
-		if (requestFields.find("Transfer-Encoding") != requestFields.end())
+		if (this->data.find("\r\n") != std::string::npos)
 		{
+			this->data = this->data.substr(this->data.find("\r\n") + 2);
+		}
+		if (requestFields.find("Transfer-Encoding") != requestFields.end() && requestFields["Transfer-Encoding"] == "chunked")
+		{
+			while(1)
+			{
+			int length = std::stoi(line, nullptr, 16);
+			this->data = this->data.substr(line.length() + 2);
+			this->body += this->data.substr(0, length);
+			}
 			
-			this->setIsDone(true);
 		}
 		else if (requestFields.find("Content-Length") != requestFields.end())
 		{
-			if (this->data.find("\r\n") != std::string::npos)
+			long length = std::stoi(requestFields["Content-Length"]);
+			this->body = this->data.substr(0, std::min(length, (long)this->data.length()));
+			this->data = this->data.substr(std::min(length, (long)this->data.length()));
+			length -= this->body.length();
+			while(length > 0)
 			{
-				this->data = this->data.substr(this->data.find("\r\n") + 2);
+				char *buff = new char[length];
+				size_t bytes_read = recv(Socket, buff, length, 0);
+				if (bytes_read > 0)
+				{
+					this->body += std::string(buff, buff + length);
+					length -= bytes_read;
+				}
+				else if(!bytes_read)
+				{
+					this->closeConnection = true;
+					return;
+				}
+				else
+				{
+					this->hasError = true;
+					this->errorMessage = "Error: recv() failed";
+					return;
+				}
 			}
-			this->body = this->data.substr(0, std::stoi(requestFields["Content-Length"]));
-			this->data = this->data.substr(std::stoi(requestFields["Content-Length"]));
-			this->setIsDone(true);
 			std::cout << "body : " << this->body << std::endl;
 		}
-		else
-		{
-			this->setIsDone(true);
-		}
+		this->setIsDone(true);
 	}
 }
 
