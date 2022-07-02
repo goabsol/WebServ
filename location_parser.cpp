@@ -18,12 +18,14 @@ Location_T::Location_T(const Location_T& location)
 	autoindex = location.autoindex;
 	upload_store = location.upload_store;
 	locations = location.locations;
+	redirection = location.redirection;
 
 	autoindex_set = location.autoindex_set;
 	upload_store_set = location.upload_store_set;
 	allowed_methods_set = location.allowed_methods_set;
 	root_set = location.root_set;
 	index_set = location.index_set;
+	redirection_set = location.redirection_set;
 }
 
 Location_T& Location_T::operator=(const Location_T& location)
@@ -34,13 +36,14 @@ Location_T& Location_T::operator=(const Location_T& location)
 	autoindex = location.autoindex;
 	upload_store = location.upload_store;
 	locations = location.locations;
-
+	redirection = location.redirection;
 
 	autoindex_set = location.autoindex_set;
 	upload_store_set = location.upload_store_set;
 	allowed_methods_set = location.allowed_methods_set;
 	root_set = location.root_set;
 	index_set = location.index_set;
+	redirection_set = location.redirection_set;
 	return *this;
 }
 
@@ -56,6 +59,7 @@ Location_T::Location_T(std::vector<token_T> &tokens, size_t &i, Server_T *server
 	this->allowed_methods_set = false;
 	this->root_set = false;
 	this->index_set = false;
+	this->redirection_set = false;
 	i+=2;
 	while(tokens[i].type != RIGHTBRACE)
 	{
@@ -126,6 +130,21 @@ Location_T::Location_T(std::vector<token_T> &tokens, size_t &i, Server_T *server
 				else
 					print_and_exit(" autoindex must be on or off", tokens[i].line);
 				this->autoindex_set = true;
+			}
+			else if (tokens[i].value == "return")
+			{
+				if (this->redirection_set)
+				{
+					print_and_exit("Error: redirection already set", tokens[i].line);
+				}
+				i++;
+				
+				this->redirection = parse_error_page(tokens, i);
+				this->redirection_set = true;
+			}
+			else
+			{
+				print_and_exit("Error: invalid location parameter", tokens[i].line);
 			}
 		}
 		else if (tokens[i].type == LOCATION)

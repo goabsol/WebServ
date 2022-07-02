@@ -20,10 +20,12 @@ class Location_T
 		bool autoindex;
 		std::string upload_store;
 		std::map<std::string, Location_T> locations;
+		std::pair<int, std::string> redirection;
 
 		bool autoindex_set;
 		bool upload_store_set;
 		bool allowed_methods_set;
 		bool root_set;
 		bool index_set;
+		bool redirection_set;
 };
