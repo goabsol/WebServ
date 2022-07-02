@@ -59,6 +59,7 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i, parser_T *parser)
 	this->autoindex = parser->autoindex;
 	this->ipv4_set = false;
 	this->allowed_methods_set = false;
+	this->allowed_methods_inh = parser->allowed_methods_set;
 	this->body_size_limit_set = false;
 	this->autoindex_set = false;
 	this->root_set = false;
@@ -255,6 +256,7 @@ Server_T::Server_T(const Server_T& server)
 	this->body_size_limit_set = server.body_size_limit_set;
 	this->index_set = server.index_set;
 	this->autoindex_set = server.autoindex_set;
+	this->allowed_methods_inh = server.allowed_methods_inh;
 }
 
 Server_T& Server_T::operator=(const Server_T& server)
@@ -274,6 +276,7 @@ Server_T& Server_T::operator=(const Server_T& server)
 	this->body_size_limit_set = server.body_size_limit_set;
 	this->index_set = server.index_set;
 	this->autoindex_set = server.autoindex_set;
+	this->allowed_methods_inh = server.allowed_methods_inh;
 	return *this;
 }
 

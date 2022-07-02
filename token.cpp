@@ -57,7 +57,7 @@ std::pair<int,std::string> parse_error_page(std::vector<token_T> tokens,  size_t
 	{
 		print_and_exit(" error_pages must be an integer", tokens[i].line);
 	}
-	if (code < 0 || code > 599)
+	if (code < 200 || code > 599)
 	{
 		print_and_exit(" error_pages must be between 0 and 599", tokens[i].line);
 	}

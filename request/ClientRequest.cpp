@@ -34,7 +34,7 @@ ClientRequest::ClientRequest( const ClientRequest & src )
 	*this = src;
 }
 
-ClientRequest::ClientRequest(int socket, Server_T &server) : Socket(socket), data(""), requestPosition(0), hasError(false), isDone(false), closeConnection(false), server(server)
+ClientRequest::ClientRequest(int socket, Server_T &server) : Socket(socket), data(""), requestPosition(0), hasError(false), isDone(false), closeConnection(false), server(server), current_location(Location_T())
 {
 }
 
@@ -126,6 +126,16 @@ void ClientRequest::setIsDone(bool isDone)
 bool ClientRequest::locationExists(std::string &request)
 {
 	if (this->server.locations.find(request) != this->server.locations.end())
+		return true;
+	return false;
+}
+
+bool ClientRequest::autorised_method(std::string &method)
+{
+	if (this->current_location.allowed_methods_inh == false && this->current_location.allowed_methods_set == false)
+		return true;
+	std::vector<std::string> current_methods = this->current_location.allowed_methods;
+	if (std::find(current_methods.begin(), current_methods.end(), method) != current_methods.end())
 		return true;
 	return false;
 }
@@ -222,6 +232,21 @@ void ClientRequest::checkLineValidity(std::string line)
 			this->errorMessage = "Error: Request line HTTP version not valid";
 			/* ERROR 404 */
 			throw http_error_exception(404, "Not Found");
+			return ;
+		}
+		this->current_location = this->server.locations[requestline[1]];
+		if (this->server.locations[requestline[1]].redirection_set)
+		{
+			/* CODE 301
+			SEND (this->server.locations[requestline[1]].redirection).second */ 
+			return ;
+		}
+		else if (!autorised_method(this->method))
+		{
+			this->hasError = true;
+			this->errorMessage = "Error: Request line method not autorised";
+			/* ERROR 405 */
+			throw http_error_exception(405, "Method Not Allowed");
 			return ;
 		}
 		else

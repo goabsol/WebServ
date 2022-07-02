@@ -30,6 +30,7 @@ class ClientRequest
 		void setIsDone(bool);
 		bool getConnectionClosed();
 		bool locationExists(std::string &request);
+		bool autorised_method(std::string &method);
 
 	private:
 		int Socket;
@@ -46,6 +47,7 @@ class ClientRequest
 		bool isDone;
 		bool closeConnection;
 		Server_T server;
+		Location_T current_location;
 };
 
 std::ostream &			operator<<( std::ostream & o, ClientRequest const & i );

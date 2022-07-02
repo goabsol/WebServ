@@ -25,6 +25,7 @@ class Location_T
 		bool autoindex_set;
 		bool upload_store_set;
 		bool allowed_methods_set;
+		bool allowed_methods_inh;
 		bool root_set;
 		bool index_set;
 		bool redirection_set;

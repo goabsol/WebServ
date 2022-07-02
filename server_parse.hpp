@@ -29,6 +29,7 @@ class Server_T
 
 		bool ipv4_set;
 		bool allowed_methods_set;
+		bool allowed_methods_inh;
 		bool index_set;
 		bool body_size_limit_set;
 		bool root_set;
