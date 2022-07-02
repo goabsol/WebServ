@@ -122,9 +122,16 @@ void ClientRequest::setIsDone(bool isDone)
 }
 /* ************************************************************************** */
 
+
+bool ClientRequest::locationExists(std::string &request)
+{
+	if (this->server.locations.find(request) != this->server.locations.end())
+		return true;
+	return false;
+}
+
 void ClientRequest::parseRequest(std::string &line)
 {
-	//need to redo this loop
 	std::cout << "line: " << line << std::endl;
 	if (line == "")
 	{
@@ -207,6 +214,14 @@ void ClientRequest::checkLineValidity(std::string line)
 			this->errorMessage = "Error: Request line URI too long";
 			/* ERROR 414 */
 			throw http_error_exception(414, "Request-URI Too Long");
+			return ;
+		}
+		else if (!locationExists(requestline[1]))
+		{
+			this->hasError = true;
+			this->errorMessage = "Error: Request line HTTP version not valid";
+			/* ERROR 404 */
+			throw http_error_exception(404, "Not Found");
 			return ;
 		}
 		else

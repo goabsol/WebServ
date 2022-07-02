@@ -39,4 +39,3 @@ public:
 	http_error_exception(int code, const std::string message);
 	const char* what() const noexcept;
 };
-
