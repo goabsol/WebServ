@@ -56,6 +56,7 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i, parser_T *parser)
 	this->root = parser->root;
 	this->allowed_methods = parser->allowed_methods;
 	this->body_size_limit = parser->body_size_limit;
+	this->server_name = "";
 	this->autoindex = parser->autoindex;
 	this->ipv4_set = false;
 	this->allowed_methods_set = false;
@@ -134,7 +135,7 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i, parser_T *parser)
 			}
 			else if (tokens[i].value == "error_page")
 			{
-				this->error_pages.insert(parse_error_page(tokens,i));
+				this->error_pages.insert(parse_error_page(tokens,i, "error page "));
 			}
 			else if (tokens[i].value == "listen")
 			{
@@ -182,15 +183,12 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i, parser_T *parser)
 			else if (tokens[i].value == "server_name")
 			{
 				i++;
-				if (this->server_name.size() > 0)
+				if (this->server_name != "")
 				{
 					print_and_exit("server names already set", tokens[i].line);
 				}
-				while(tokens[i].type != SEMICOLON)
-				{
-					this->server_name.push_back(tokens[i].value);
-					i++;
-				}
+				this->server_name = tokens[i].value;
+				i++;
 			}
 			else if (tokens[i].value == "cgi")
 			{
@@ -282,14 +280,4 @@ Server_T& Server_T::operator=(const Server_T& server)
 
 Server_T::~Server_T()
 {
-	this->root = "";
-	this->body_size_limit = 0;
-	this->allowed_methods.clear();
-	this->index.clear();
-	this->error_pages.clear();
-	this->server_name.clear();
-	this->cgi.clear();
-	this->autoindex = false;
-	this->locations.clear();
-	this->ports.clear();
 }

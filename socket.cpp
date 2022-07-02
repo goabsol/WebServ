@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/09 07:34:47 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/29 16:11:20 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/02 23:56:17 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -154,6 +154,7 @@ int    sockinit(parser_T parser)
 				std::string hello = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 12\r\n\r\nHello world!";
 				int sent_bytes = send(i,hello.c_str(),hello.size(),0);
 				std::cout << "Data sent ---> sent: " << sent_bytes << " ----- total: " << hello.size() << std::endl;
+				std::cout << clients[i].getData() << std::endl;
 				//remove socket from write_fd and add to read_fd
 				FD_CLR(i, &write_fd);
 				FD_SET(i, &read_fd);

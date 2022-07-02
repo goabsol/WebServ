@@ -31,6 +31,8 @@ class ClientRequest
 		bool getConnectionClosed();
 		bool locationExists(std::string &request);
 		bool autorised_method(std::string &method);
+		std::map<std::string, std::string> getRequestFields();
+		Server_T &getServer();
 
 	private:
 		int Socket;

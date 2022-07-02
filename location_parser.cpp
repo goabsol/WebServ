@@ -142,9 +142,7 @@ Location_T::Location_T(std::vector<token_T> &tokens, size_t &i, Server_T *server
 				{
 					print_and_exit("Error: redirection already set", tokens[i].line);
 				}
-				i++;
-				
-				this->redirection = parse_error_page(tokens, i);
+				this->redirection = parse_error_page(tokens, i, "redirection");
 				this->redirection_set = true;
 			}
 			else

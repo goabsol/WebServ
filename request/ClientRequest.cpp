@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/30 18:16:51 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/03 00:13:17 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,10 +115,22 @@ bool ClientRequest::getConnectionClosed()
 	return this->closeConnection;
 }
 
+std::map<std::string, std::string> ClientRequest::getRequestFields()
+{
+	return this->requestFields;
+}
+
+Server_T &ClientRequest::getServer()
+{
+	return this->server;
+}
+
 void ClientRequest::setIsDone(bool isDone)
 {
 	this->isDone = isDone;
 	this->requestPosition = 0;
+	this->hasError = false;
+	this->errorMessage = "";
 }
 /* ************************************************************************** */
 
@@ -142,7 +154,7 @@ bool ClientRequest::autorised_method(std::string &method)
 
 void ClientRequest::parseRequest(std::string &line)
 {
-	std::cout << "line: " << line << std::endl;
+	// std::cout << "line: " << line << std::endl;
 	if (line == "")
 	{
 		this->requestPosition = 2;
@@ -193,6 +205,7 @@ void ClientRequest::parseRequest(std::string &line)
 
 void ClientRequest::checkLineValidity(std::string line)
 {
+	std::cout << "line:| " << line <<"|"<< std::endl;
 	if (this->requestPosition == 0)
 	{
 		std::vector<std::string> requestline = split(line, ' ');
@@ -229,7 +242,7 @@ void ClientRequest::checkLineValidity(std::string line)
 		else if (!locationExists(requestline[1]))
 		{
 			this->hasError = true;
-			this->errorMessage = "Error: Request line HTTP version not valid";
+			this->errorMessage = "Error: page not found";
 			/* ERROR 404 */
 			throw http_error_exception(404, "Not Found");
 			return ;
@@ -239,6 +252,7 @@ void ClientRequest::checkLineValidity(std::string line)
 		{
 			/* CODE 301
 			SEND (this->server.locations[requestline[1]].redirection).second */ 
+			throw http_error_exception(301, "Moved Permanently");
 			return ;
 		}
 		else if (!autorised_method(this->method))
@@ -300,7 +314,6 @@ void ClientRequest::checkLineValidity(std::string line)
 		else if (requestFields.find("Content-Length") != requestFields.end())
 		{
 			long length = std::stoi(requestFields["Content-Length"]);
-			std::cout << "body size limit " << this->server.body_size_limit << std::endl;
 			if (length > this->server.body_size_limit)
 			{
 				this->hasError = true;
@@ -378,13 +391,15 @@ void ClientRequest::storeRequest()
 			line = this->data.substr(0, this->data.find("\r\n"));
 		else
 			line = this->data;
+		std::cout << "lineeee : " << line << "|||" <<std::endl;
 		parseRequest(line);
 		try
 		{
 			if (this->data.find("\r\n") != std::string::npos)
 			{
+				std::cout << "dshjbcksjbd" << std::endl;
 				this->data = this->data.substr(this->data.find("\r\n") + 2);
-			}	
+			}
 		}
 		catch(std::exception e)
 		{

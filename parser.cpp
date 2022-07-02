@@ -82,7 +82,7 @@ parser_T::parser_T(std::vector<token_T> tokens)
 			}
 			else if (tokens[i].value == "error_page")
 			{
-				this->error_pages.insert(parse_error_page(tokens,i));
+				this->error_pages.insert(parse_error_page(tokens,i, "error page "));
 			}
 			else if (tokens[i].value == "autoindex")
 			{
