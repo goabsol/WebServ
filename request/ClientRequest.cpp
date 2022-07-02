@@ -31,9 +31,10 @@ ClientRequest::ClientRequest()
 
 ClientRequest::ClientRequest( const ClientRequest & src )
 {
+	*this = src;
 }
 
-ClientRequest::ClientRequest(int socket) : Socket(socket), data(""), requestPosition(0), hasError(false), isDone(false), closeConnection(false)
+ClientRequest::ClientRequest(int socket, Server_T &server) : Socket(socket), data(""), requestPosition(0), hasError(false), isDone(false), closeConnection(false), server(server)
 {
 }
 
@@ -67,6 +68,7 @@ ClientRequest &				ClientRequest::operator=( ClientRequest const & rhs )
 		this->requestPosition = rhs.requestPosition;
 		this->isDone = rhs.isDone;
 		this->closeConnection = rhs.closeConnection;
+		this->server = rhs.server;
 	}
 	return *this;
 }
@@ -193,7 +195,24 @@ void ClientRequest::checkLineValidity(std::string line)
 		{
 			this->method = requestline[0];
 		}
-		this->requestURI = requestline[1];
+		if (!validURI(requestline[1]))
+		{
+			/* ERROR 400 */
+			throw http_error_exception(400, "Bad Request");
+			return ;
+		}
+		else if (requestline[1].length() > 2048)
+		{
+			this->hasError = true;
+			this->errorMessage = "Error: Request line URI too long";
+			/* ERROR 414 */
+			throw http_error_exception(414, "Request-URI Too Long");
+			return ;
+		}
+		else
+		{
+			this->requestURI = requestline[1];
+		}
 		if (requestline[2] != "HTTP/1.1")
 		{
 			this->hasError = true;
@@ -220,8 +239,16 @@ void ClientRequest::checkLineValidity(std::string line)
 		{
 			this->data = this->data.substr(this->data.find("\r\n") + 2);
 		}
-		if (requestFields.find("Transfer-Encoding") != requestFields.end() && requestFields["Transfer-Encoding"] == "chunked")
+		if (requestFields.find("Transfer-Encoding") != requestFields.end())
 		{
+			if (requestFields["Transfer-Encoding"] != "chunked")
+			{
+				this->hasError = true;
+				this->errorMessage = "Error: Transfer-Encoding not chunked";
+				/* 501 ERROR */
+				throw http_error_exception(501, "Not Implemented");
+				return ;
+			}
 			while(1)
 			{
 			int length = std::stoi(line, nullptr, 16);
@@ -233,6 +260,15 @@ void ClientRequest::checkLineValidity(std::string line)
 		else if (requestFields.find("Content-Length") != requestFields.end())
 		{
 			long length = std::stoi(requestFields["Content-Length"]);
+			std::cout << "body size limit " << this->server.body_size_limit << std::endl;
+			if (length > this->server.body_size_limit)
+			{
+				this->hasError = true;
+				this->errorMessage = "Error: Content-Length too long";
+				/* 413 ERROR */
+				throw http_error_exception(413, "Request Entity Too Large");
+				return ;
+			}
 			this->body = this->data.substr(0, std::min(length, (long)this->data.length()));
 			this->data = this->data.substr(std::min(length, (long)this->data.length()));
 			length -= this->body.length();

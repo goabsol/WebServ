@@ -6,7 +6,6 @@ Location_T::Location_T()
 	root = "";
 	cgi = std::vector<std::string>();
 	allowed_methods = std::vector<std::string>();
-	body_size_limit = 0;
 	autoindex = false;
 	upload_store = "";
 }
@@ -16,14 +15,12 @@ Location_T::Location_T(const Location_T& location)
 	root = location.root;
 	cgi = location.cgi;
 	allowed_methods = location.allowed_methods;
-	body_size_limit = location.body_size_limit;
 	autoindex = location.autoindex;
 	upload_store = location.upload_store;
 	locations = location.locations;
 
 	autoindex_set = location.autoindex_set;
 	upload_store_set = location.upload_store_set;
-	body_size_limit_set = location.body_size_limit_set;
 	allowed_methods_set = location.allowed_methods_set;
 	root_set = location.root_set;
 	index_set = location.index_set;
@@ -34,7 +31,6 @@ Location_T& Location_T::operator=(const Location_T& location)
 	root = location.root;
 	cgi = location.cgi;
 	allowed_methods = location.allowed_methods;
-	body_size_limit = location.body_size_limit;
 	autoindex = location.autoindex;
 	upload_store = location.upload_store;
 	locations = location.locations;
@@ -42,7 +38,6 @@ Location_T& Location_T::operator=(const Location_T& location)
 
 	autoindex_set = location.autoindex_set;
 	upload_store_set = location.upload_store_set;
-	body_size_limit_set = location.body_size_limit_set;
 	allowed_methods_set = location.allowed_methods_set;
 	root_set = location.root_set;
 	index_set = location.index_set;
@@ -53,13 +48,11 @@ Location_T::Location_T(std::vector<token_T> &tokens, size_t &i, Server_T *server
 {
 	this->allowed_methods = server->allowed_methods;
 	this->autoindex = server->autoindex;
-	this->body_size_limit = server->body_size_limit;
 	this->index = server->index;
 	this->root = server->root;
 
 	this->autoindex_set = false;
 	this->upload_store_set = false;
-	this->body_size_limit_set = false;
 	this->allowed_methods_set = false;
 	this->root_set = false;
 	this->index_set = false;
@@ -77,27 +70,6 @@ Location_T::Location_T(std::vector<token_T> &tokens, size_t &i, Server_T *server
 				i++;
 				this->root = tokens[i].value;
 				this->root_set = true;
-			}
-			else if (tokens[i].value == "body_size_limit")
-			{
-				i++;
-				if (this->body_size_limit_set)
-				{
-					print_and_exit("Error: body_size_limit already set", tokens[i].line);
-				}
-				try
-				{
-						this->body_size_limit = std::stoi(tokens[i].value);
-						this->body_size_limit_set = true;
-				}
-				catch(const std::exception& e)
-				{
-					print_and_exit(" body_size_limit must be an integer", tokens[i].line);
-				}
-				if (this->body_size_limit < 0)
-				{
-					print_and_exit(" body_size_limit must be positive", tokens[i].line);
-				}
 			}
 			else if (tokens[i].value == "allowed_methods")
 			{

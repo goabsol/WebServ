@@ -22,6 +22,7 @@ int    sockinit(parser_T parser)
 	fd_set read_fd;
 	FD_ZERO(&read_fd);
 	std::map<SOCKET, Server_T> m_socket_to_server;
+	std::map<SOCKET, std::string> m_socket_to_response;
 	//create socket for each port
 	for (size_t i = 0; i < parser.servers.size(); i++)
 	{
@@ -100,7 +101,7 @@ int    sockinit(parser_T parser)
 						max_fd = client_fd;
 					m_socket_to_server[client_fd] = m_socket_to_server[i];
 					std::cout << i << " " << client_fd << std::endl;
-					clients[client_fd] = ClientRequest(client_fd);
+					clients[client_fd] = ClientRequest(client_fd, m_socket_to_server[i]);
 					break;
 				}
 				else {
@@ -115,7 +116,19 @@ int    sockinit(parser_T parser)
 					////////////////////////////////////////////////////////////////////
 					if (!clients[i].getIsDone())
 					{
-						clients[i].storeRequest();
+						try
+						{
+							clients[i].storeRequest();
+							m_socket_to_response[i] = craftResponse(clients[i]);
+						}
+						catch(http_error_exception& e)
+						{
+							std::cout << e.what() << std::endl;
+							clients[i].setIsDone(true);
+							m_socket_to_response[i] = craftResponse(clients[i], e.code);
+
+						}
+
 					}
 					////////////////////////////////////////////////////////////////////
 					// std::cout << client.getHasError() << " " << client.getIsDone() << std::endl;

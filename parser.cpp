@@ -7,7 +7,7 @@ parser_T::parser_T()
 parser_T::parser_T(std::vector<token_T> tokens)
 {
 	this->root = "";
-	this->body_size_limit = 0;
+	this->body_size_limit = 1024 * 1024;
 	this->root_set = false;
 	this->body_size_limit_set = false;
 	this->autoindex = false;

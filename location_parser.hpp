@@ -16,7 +16,6 @@ class Location_T
 		std::string root;
 		std::vector<std::string> cgi;
 		std::vector<std::string> allowed_methods;
-		int body_size_limit;
 		std::vector<std::string> index;
 		bool autoindex;
 		std::string upload_store;
@@ -24,7 +23,6 @@ class Location_T
 
 		bool autoindex_set;
 		bool upload_store_set;
-		bool body_size_limit_set;
 		bool allowed_methods_set;
 		bool root_set;
 		bool index_set;

@@ -6,6 +6,7 @@
 #include <map>
 #include <sys/socket.h>
 #include "../tools.hpp"
+#include "../server_parse.hpp"
 
 class ClientRequest
 {
@@ -13,7 +14,7 @@ class ClientRequest
 
 		ClientRequest();
 		ClientRequest( ClientRequest const & src );
-		ClientRequest (int);
+		ClientRequest (int, Server_T &);
 		~ClientRequest();
 		bool getHasError();
 		bool getIsDone();
@@ -43,6 +44,7 @@ class ClientRequest
 		int requestPosition;
 		bool isDone;
 		bool closeConnection;
+		Server_T server;
 };
 
 std::ostream &			operator<<( std::ostream & o, ClientRequest const & i );

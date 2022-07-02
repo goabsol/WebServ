@@ -31,3 +31,12 @@ std::string token_type_to_string(int type);
 
 std::pair<int,std::string> parse_error_page(std::vector<token_T> tokens,  size_t &i);
 
+class http_error_exception : public std::exception
+{
+public:
+	int code;
+	std::string message;
+	http_error_exception(int code, const std::string message);
+	const char* what() const noexcept;
+};
+

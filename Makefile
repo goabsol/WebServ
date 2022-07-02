@@ -36,3 +36,5 @@ clean :
 
 fclean : clean
 	rm -f $(NAME)
+
+rclean : all clean

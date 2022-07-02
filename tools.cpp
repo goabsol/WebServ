@@ -133,3 +133,24 @@ std::vector<std::string> split(std::string &value, char c)
 	}
 	return result;
 }
+
+bool validURI(std::string &uri)
+{
+	for(size_t i = 0; i < uri.size(); i++)
+	{
+		if (std::string("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ._~:/?#[]@!$&'()*+,;=%").find(uri[i]) == std::string::npos)
+			return false;
+	}
+	return true;
+}
+
+http_error_exception::http_error_exception(int code, const std::string message)
+{
+	this->code = code;
+	this->message = message;
+}
+
+const char* http_error_exception::what() const noexcept
+{
+		return message.c_str();
+}
