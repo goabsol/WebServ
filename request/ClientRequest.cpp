@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/29 13:12:32 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/06/30 18:16:51 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,9 +31,10 @@ ClientRequest::ClientRequest()
 
 ClientRequest::ClientRequest( const ClientRequest & src )
 {
+	*this = src;
 }
 
-ClientRequest::ClientRequest(int socket) : Socket(socket), data(""), requestPosition(0), hasError(false), isDone(false), closeConnection(false)
+ClientRequest::ClientRequest(int socket, Server_T &server) : Socket(socket), data(""), requestPosition(0), hasError(false), isDone(false), closeConnection(false), server(server)
 {
 }
 
@@ -67,6 +68,7 @@ ClientRequest &				ClientRequest::operator=( ClientRequest const & rhs )
 		this->requestPosition = rhs.requestPosition;
 		this->isDone = rhs.isDone;
 		this->closeConnection = rhs.closeConnection;
+		this->server = rhs.server;
 	}
 	return *this;
 }
@@ -120,11 +122,23 @@ void ClientRequest::setIsDone(bool isDone)
 }
 /* ************************************************************************** */
 
+
+bool ClientRequest::locationExists(std::string &request)
+{
+	if (this->server.locations.find(request) != this->server.locations.end())
+		return true;
+	return false;
+}
+
 void ClientRequest::parseRequest(std::string &line)
 {
-	//need to redo this loop
-	std::cout << ":" << line << ":"<< std::endl;
-	
+	std::cout << "line: " << line << std::endl;
+	if (line == "")
+	{
+		this->requestPosition = 2;
+		line = this->data;
+	}
+	this->checkLineValidity(line);
 		// if (this->data.find("\r\n") != std::string::npos)
 		// {
 		// 	if (this->requestPosition < 2)
@@ -169,16 +183,16 @@ void ClientRequest::parseRequest(std::string &line)
 
 void ClientRequest::checkLineValidity(std::string line)
 {
-	if (this->requestPosition == 1)
+	if (this->requestPosition == 0)
 	{
-		std::vector<std::string> requestline = split_white_space(line);
+		std::vector<std::string> requestline = split(line, ' ');
 		if (requestline.size() != 3 || countChr(line, ' ') != 2)
 		{
 			this->hasError = true;
 			this->errorMessage = "Error: Request line wrong number of parameters";
 			return ;
 		}
-		if (std::find(v_methods.begin(), v_methods.end(), requestline[0]) == v_methods.end())
+		if (!validMethod(requestline[0]))
 		{
 			this->hasError = true;
 			this->errorMessage = "Error: Request line method not valid";
@@ -188,7 +202,32 @@ void ClientRequest::checkLineValidity(std::string line)
 		{
 			this->method = requestline[0];
 		}
-		this->requestURI = requestline[1];
+		if (!validURI(requestline[1]))
+		{
+			/* ERROR 400 */
+			throw http_error_exception(400, "Bad Request");
+			return ;
+		}
+		else if (requestline[1].length() > 2048)
+		{
+			this->hasError = true;
+			this->errorMessage = "Error: Request line URI too long";
+			/* ERROR 414 */
+			throw http_error_exception(414, "Request-URI Too Long");
+			return ;
+		}
+		else if (!locationExists(requestline[1]))
+		{
+			this->hasError = true;
+			this->errorMessage = "Error: Request line HTTP version not valid";
+			/* ERROR 404 */
+			throw http_error_exception(404, "Not Found");
+			return ;
+		}
+		else
+		{
+			this->requestURI = requestline[1];
+		}
 		if (requestline[2] != "HTTP/1.1")
 		{
 			this->hasError = true;
@@ -199,9 +238,9 @@ void ClientRequest::checkLineValidity(std::string line)
 		{
 			this->httpVersion = requestline[2];
 		}
-		requestPosition = 2;
+		requestPosition = 1;
 	}
-	else if (requestPosition == 2)
+	else if (requestPosition == 1)
 	{
 		char *l = strdup(line.c_str());
 		std::string p(strtok(l, ": "));
@@ -211,28 +250,77 @@ void ClientRequest::checkLineValidity(std::string line)
 	}
 	else
 	{
-		if (requestFields.find("Content-Length") != requestFields.end())
+		if (this->data.find("\r\n") != std::string::npos)
 		{
 			this->data = this->data.substr(this->data.find("\r\n") + 2);
-			if (this->data.length() != std::stoi(requestFields["Content-Length"]))
+		}
+		if (requestFields.find("Transfer-Encoding") != requestFields.end())
+		{
+			if (requestFields["Transfer-Encoding"] != "chunked")
 			{
 				this->hasError = true;
-				//error here
-				
+				this->errorMessage = "Error: Transfer-Encoding not chunked";
+				/* 501 ERROR */
+				throw http_error_exception(501, "Not Implemented");
 				return ;
 			}
-			this->body = this->data.substr(0, std::stoi(requestFields["Content-Length"]));
+			while(1)
+			{
+			int length = std::stoi(line, nullptr, 16);
+			this->data = this->data.substr(line.length() + 2);
+			this->body += this->data.substr(0, length);
+			}
+			
 		}
-		else
+		else if (requestFields.find("Content-Length") != requestFields.end())
 		{
-			//To do: parse chunked;
+			long length = std::stoi(requestFields["Content-Length"]);
+			std::cout << "body size limit " << this->server.body_size_limit << std::endl;
+			if (length > this->server.body_size_limit)
+			{
+				this->hasError = true;
+				this->errorMessage = "Error: Content-Length too long";
+				/* 413 ERROR */
+				throw http_error_exception(413, "Request Entity Too Large");
+				return ;
+			}
+			this->body = this->data.substr(0, std::min(length, (long)this->data.length()));
+			this->data = this->data.substr(std::min(length, (long)this->data.length()));
+			length -= this->body.length();
+			while(length > 0)
+			{
+				char *buff = new char[length];
+				size_t bytes_read = recv(Socket, buff, length, 0);
+				if (bytes_read > 0)
+				{
+					this->body += std::string(buff, buff + length);
+					length -= bytes_read;
+				}
+				else if(!bytes_read)
+				{
+					this->closeConnection = true;
+					return;
+				}
+				else
+				{
+					this->hasError = true;
+					this->errorMessage = "Error: recv() failed";
+					return;
+				}
+			}
+			std::cout << "body : " << this->body << std::endl;
 		}
+		this->setIsDone(true);
 	}
 }
 
 
 void ClientRequest::storeRequest()
 {
+	if (this->hasError == true)
+	{
+		return ;
+	}
 	char *buffer = new char[1024];
 	memeset(buffer, 0, 1024);
     size_t bytes_read = 0;
@@ -260,17 +348,27 @@ void ClientRequest::storeRequest()
 	}
     while (this->data.find("\r\n") != std::string::npos)
     {
-		std::string line = this->data.substr(0, this->data.find("\r\n"));
-		this->parseRequest(line);
+		std::string line;
+		if (this->data.find("\r\n") != std::string::npos)
+			line = this->data.substr(0, this->data.find("\r\n"));
+		else
+			line = this->data;
+		parseRequest(line);
 		try
 		{
-			this->data = this->data.substr(this->data.find("\r\n") + 2);
+			if (this->data.find("\r\n") != std::string::npos)
+			{
+				this->data = this->data.substr(this->data.find("\r\n") + 2);
+			}	
 		}
 		catch(std::exception e)
 		{
-			std::cout << "Error: " << e.what() << std::endl;
+			std::cerr << "Error: " << this->data << std::endl;
 		}
-		
-    }
+		}
+		if (this->hasError == true)
+		{
+			return ;
+		}
 	// std::cout << this->data << std::endl
 }

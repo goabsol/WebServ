@@ -38,3 +38,21 @@ std::vector<std::string> split(std::string &value, char c);
 bool validMethod(std::string &method);
 
 void trimwspace(std::string &str);
+
+bool validURI(std::string &uri);
+
+class http_error_exception : public std::exception
+{
+public:
+	http_error_exception(int code, const std::string message)
+	{
+		this->code = code;
+		this->message = message;
+	}
+	int code;
+	std::string message;
+	const char* what() const noexcept
+	{
+		return message.c_str();
+	}
+};

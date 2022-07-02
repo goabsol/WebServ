@@ -13,7 +13,6 @@ void trimwspace(std::string &str)
 {
 	while(str.size() > 0 && std::iswspace(str[0]))
 		str.erase(0, 1);
-	std::cout << "hihihihihihihi" << std::endl;
 }
 
 std::vector<std::string> split_white_space(std::string &line)
@@ -89,7 +88,7 @@ bool string_is_digit(std::string str)
 
 bool validMethod(std::string &method)
 {
-	if (method != "POST" && method != "GET" && method != "HEAD" && method != "PUT" && method != "DELETE" && method != "OPTIONS" && method != "CONNECT" && method != "TRACE")
+	if (method != "POST" && method != "GET" && method != "HEAD" && method != "PUT" && method != "DELETE")
 	{
 		return false;
 	}
@@ -133,4 +132,25 @@ std::vector<std::string> split(std::string &value, char c)
 		i = j + 1;
 	}
 	return result;
+}
+
+bool validURI(std::string &uri)
+{
+	for(size_t i = 0; i < uri.size(); i++)
+	{
+		if (std::string("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ._~:/?#[]@!$&'()*+,;=%").find(uri[i]) == std::string::npos)
+			return false;
+	}
+	return true;
+}
+
+http_error_exception::http_error_exception(int code, const std::string message)
+{
+	this->code = code;
+	this->message = message;
+}
+
+const char* http_error_exception::what() const noexcept
+{
+		return message.c_str();
 }
