@@ -234,6 +234,7 @@ void ClientRequest::checkLineValidity(std::string line)
 			return ;
 		}
 		this->current_location = this->server.locations[requestline[1]];
+		this->current_location_path = requestline[1];
 		if (this->server.locations[requestline[1]].redirection_set)
 		{
 			throw http_error_exception(301, "Moved Permanently");

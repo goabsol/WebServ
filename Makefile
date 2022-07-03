@@ -26,7 +26,7 @@ all : $(NAME)
 ${NAME} : $(OBJ)
 	c++ $(FLG) $(OBJ) -o $(NAME)
 
-%.o : %.cpp
+%.o : %.cpp $(HDR)
 	c++ $(FLG) -c $< -o $@
 
 re: fclean all

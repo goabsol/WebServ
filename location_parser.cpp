@@ -3,7 +3,7 @@
 
 Location_T::Location_T()
 {
-	root = "";
+	root = "/Users/yihssan/Desktop/WebServ";
 	cgi = std::vector<std::string>();
 	allowed_methods = std::vector<std::string>();
 	autoindex = false;
@@ -160,5 +160,9 @@ Location_T::Location_T(std::vector<token_T> &tokens, size_t &i, Server_T *server
 			print_and_exit(" invalid token", tokens[i].line);
 		}
 		i++;
+	}
+	if (this->root == "")
+	{
+		print_and_exit("Error: root not set", tokens[i].line);
 	}
 }

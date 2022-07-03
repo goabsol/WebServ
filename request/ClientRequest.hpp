@@ -34,8 +34,6 @@ class ClientRequest
 		std::map<std::string, std::string> getRequestFields();
 		Server_T &getServer();
 		void clearData();
-
-	private:
 		int Socket;
 		std::string method;
 		std::string requestURI;
@@ -51,6 +49,7 @@ class ClientRequest
 		bool closeConnection;
 		Server_T server;
 		Location_T current_location;
+		std::string current_location_path;
 };
 
 std::ostream &			operator<<( std::ostream & o, ClientRequest const & i );
