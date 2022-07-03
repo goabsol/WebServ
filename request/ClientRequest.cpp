@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/03 00:13:17 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/03 02:05:45 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,7 +130,11 @@ void ClientRequest::setIsDone(bool isDone)
 	this->isDone = isDone;
 	this->requestPosition = 0;
 	this->hasError = false;
-	this->errorMessage = "";
+}
+
+void ClientRequest::clearData()
+{
+	this->data.clear();
 }
 /* ************************************************************************** */
 
@@ -205,44 +209,26 @@ void ClientRequest::parseRequest(std::string &line)
 
 void ClientRequest::checkLineValidity(std::string line)
 {
-	std::cout << "line:| " << line <<"|"<< std::endl;
 	if (this->requestPosition == 0)
 	{
 		std::vector<std::string> requestline = split(line, ' ');
-		if (requestline.size() != 3 || countChr(line, ' ') != 2)
+		if (requestline.size() != 3 || countChr(line, ' ') != 2 || !validMethod(requestline[0]) || !validURI(requestline[1]))
 		{
-			this->hasError = true;
-			this->errorMessage = "Error: Request line wrong number of parameters";
-			return ;
-		}
-		if (!validMethod(requestline[0]))
-		{
-			this->hasError = true;
-			this->errorMessage = "Error: Request line method not valid";
+			throw http_error_exception(400, "Bad Request");
 			return ;
 		}
 		else
 		{
 			this->method = requestline[0];
 		}
-		if (!validURI(requestline[1]))
+		if (requestline[1].length() > 2048)
 		{
-			/* ERROR 400 */
-			throw http_error_exception(400, "Bad Request");
-			return ;
-		}
-		else if (requestline[1].length() > 2048)
-		{
-			this->hasError = true;
-			this->errorMessage = "Error: Request line URI too long";
 			/* ERROR 414 */
 			throw http_error_exception(414, "Request-URI Too Long");
 			return ;
 		}
 		else if (!locationExists(requestline[1]))
 		{
-			this->hasError = true;
-			this->errorMessage = "Error: page not found";
 			/* ERROR 404 */
 			throw http_error_exception(404, "Not Found");
 			return ;
@@ -250,9 +236,8 @@ void ClientRequest::checkLineValidity(std::string line)
 		this->current_location = this->server.locations[requestline[1]];
 		if (this->server.locations[requestline[1]].redirection_set)
 		{
-			/* CODE 301
-			SEND (this->server.locations[requestline[1]].redirection).second */ 
 			throw http_error_exception(301, "Moved Permanently");
+			// throw http_redirect_exception((this->server.locations[requestline[1]].redirection).first, this->server.locations[requestline[1]].redirection.second, line + "\r\n" + this->data);
 			return ;
 		}
 		else if (!autorised_method(this->method))
@@ -271,6 +256,8 @@ void ClientRequest::checkLineValidity(std::string line)
 		{
 			this->hasError = true;
 			this->errorMessage = "Error: Request line HTTP version not valid";
+			/* ERROR 505 */
+			throw http_error_exception(505, "HTTP Version Not Supported");
 			return ;
 		}
 		else
@@ -391,7 +378,6 @@ void ClientRequest::storeRequest()
 			line = this->data.substr(0, this->data.find("\r\n"));
 		else
 			line = this->data;
-		std::cout << "lineeee : " << line << "|||" <<std::endl;
 		parseRequest(line);
 		try
 		{

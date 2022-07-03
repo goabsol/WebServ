@@ -42,11 +42,12 @@ void trimwspace(std::string &str);
 
 bool validURI(std::string &uri);
 
-class http_error_exception
+class http_error_exception : public std::exception
 {
 public:
+	virtual ~http_error_exception() throw();
 	int code;
 	std::string message;
 	http_error_exception(int code, const std::string message);
-	const char* what() const throw();
+	virtual const char* what() const throw();
 };

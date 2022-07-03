@@ -60,6 +60,7 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i, parser_T *parser)
 	this->autoindex = parser->autoindex;
 	this->ipv4_set = false;
 	this->allowed_methods_set = false;
+	this->error_pages = parser->error_pages;
 	this->allowed_methods_inh = parser->allowed_methods_set;
 	this->body_size_limit_set = false;
 	this->autoindex_set = false;
@@ -135,7 +136,9 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i, parser_T *parser)
 			}
 			else if (tokens[i].value == "error_page")
 			{
-				this->error_pages.insert(parse_error_page(tokens,i, "error page "));
+				std::pair<int, std::string> tmp_error = parse_error_page(tokens,i, "error page ");
+				this->error_pages[tmp_error.first] = tmp_error.second;
+
 			}
 			else if (tokens[i].value == "listen")
 			{

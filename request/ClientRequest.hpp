@@ -33,6 +33,7 @@ class ClientRequest
 		bool autorised_method(std::string &method);
 		std::map<std::string, std::string> getRequestFields();
 		Server_T &getServer();
+		void clearData();
 
 	private:
 		int Socket;

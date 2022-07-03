@@ -154,3 +154,8 @@ const char* http_error_exception::what() const throw()
 {
 	return this->message.c_str();
 }
+
+http_error_exception::~http_error_exception() throw()
+{
+	return ;
+}
