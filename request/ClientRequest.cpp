@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/30 18:16:51 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/03 02:05:45 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ ClientRequest::ClientRequest( const ClientRequest & src )
 	*this = src;
 }
 
-ClientRequest::ClientRequest(int socket, Server_T &server) : Socket(socket), data(""), requestPosition(0), hasError(false), isDone(false), closeConnection(false), server(server)
+ClientRequest::ClientRequest(int socket, Server_T &server) : Socket(socket), data(""), requestPosition(0), hasError(false), isDone(false), closeConnection(false), server(server), current_location(Location_T())
 {
 }
 
@@ -115,10 +115,26 @@ bool ClientRequest::getConnectionClosed()
 	return this->closeConnection;
 }
 
+std::map<std::string, std::string> ClientRequest::getRequestFields()
+{
+	return this->requestFields;
+}
+
+Server_T &ClientRequest::getServer()
+{
+	return this->server;
+}
+
 void ClientRequest::setIsDone(bool isDone)
 {
 	this->isDone = isDone;
 	this->requestPosition = 0;
+	this->hasError = false;
+}
+
+void ClientRequest::clearData()
+{
+	this->data.clear();
 }
 /* ************************************************************************** */
 
@@ -130,9 +146,19 @@ bool ClientRequest::locationExists(std::string &request)
 	return false;
 }
 
+bool ClientRequest::autorised_method(std::string &method)
+{
+	if (this->current_location.allowed_methods_inh == false && this->current_location.allowed_methods_set == false)
+		return true;
+	std::vector<std::string> current_methods = this->current_location.allowed_methods;
+	if (std::find(current_methods.begin(), current_methods.end(), method) != current_methods.end())
+		return true;
+	return false;
+}
+
 void ClientRequest::parseRequest(std::string &line)
 {
-	std::cout << "line: " << line << std::endl;
+	// std::cout << "line: " << line << std::endl;
 	if (line == "")
 	{
 		this->requestPosition = 2;
@@ -186,42 +212,41 @@ void ClientRequest::checkLineValidity(std::string line)
 	if (this->requestPosition == 0)
 	{
 		std::vector<std::string> requestline = split(line, ' ');
-		if (requestline.size() != 3 || countChr(line, ' ') != 2)
+		if (requestline.size() != 3 || countChr(line, ' ') != 2 || !validMethod(requestline[0]) || !validURI(requestline[1]))
 		{
-			this->hasError = true;
-			this->errorMessage = "Error: Request line wrong number of parameters";
-			return ;
-		}
-		if (!validMethod(requestline[0]))
-		{
-			this->hasError = true;
-			this->errorMessage = "Error: Request line method not valid";
+			throw http_error_exception(400, "Bad Request");
 			return ;
 		}
 		else
 		{
 			this->method = requestline[0];
 		}
-		if (!validURI(requestline[1]))
+		if (requestline[1].length() > 2048)
 		{
-			/* ERROR 400 */
-			throw http_error_exception(400, "Bad Request");
-			return ;
-		}
-		else if (requestline[1].length() > 2048)
-		{
-			this->hasError = true;
-			this->errorMessage = "Error: Request line URI too long";
 			/* ERROR 414 */
 			throw http_error_exception(414, "Request-URI Too Long");
 			return ;
 		}
 		else if (!locationExists(requestline[1]))
 		{
-			this->hasError = true;
-			this->errorMessage = "Error: Request line HTTP version not valid";
 			/* ERROR 404 */
 			throw http_error_exception(404, "Not Found");
+			return ;
+		}
+		this->current_location = this->server.locations[requestline[1]];
+		this->current_location_path = requestline[1];
+		if (this->server.locations[requestline[1]].redirection_set)
+		{
+			throw http_error_exception(301, "Moved Permanently");
+			// throw http_redirect_exception((this->server.locations[requestline[1]].redirection).first, this->server.locations[requestline[1]].redirection.second, line + "\r\n" + this->data);
+			return ;
+		}
+		else if (!autorised_method(this->method))
+		{
+			this->hasError = true;
+			this->errorMessage = "Error: Request line method not autorised";
+			/* ERROR 405 */
+			throw http_error_exception(405, "Method Not Allowed");
 			return ;
 		}
 		else
@@ -232,6 +257,8 @@ void ClientRequest::checkLineValidity(std::string line)
 		{
 			this->hasError = true;
 			this->errorMessage = "Error: Request line HTTP version not valid";
+			/* ERROR 505 */
+			throw http_error_exception(505, "HTTP Version Not Supported");
 			return ;
 		}
 		else
@@ -275,7 +302,6 @@ void ClientRequest::checkLineValidity(std::string line)
 		else if (requestFields.find("Content-Length") != requestFields.end())
 		{
 			long length = std::stoi(requestFields["Content-Length"]);
-			std::cout << "body size limit " << this->server.body_size_limit << std::endl;
 			if (length > this->server.body_size_limit)
 			{
 				this->hasError = true;
@@ -358,8 +384,9 @@ void ClientRequest::storeRequest()
 		{
 			if (this->data.find("\r\n") != std::string::npos)
 			{
+				std::cout << "dshjbcksjbd" << std::endl;
 				this->data = this->data.substr(this->data.find("\r\n") + 2);
-			}	
+			}
 		}
 		catch(std::exception e)
 		{

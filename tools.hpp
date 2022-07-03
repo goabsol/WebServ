@@ -15,6 +15,7 @@
 #include <map>
 #include <fstream>
 #include <fcntl.h>
+#include <exception>
 
 
 std::vector<std::string> split_white_space(std::string &line);
@@ -44,15 +45,9 @@ bool validURI(std::string &uri);
 class http_error_exception : public std::exception
 {
 public:
-	http_error_exception(int code, const std::string message)
-	{
-		this->code = code;
-		this->message = message;
-	}
+	virtual ~http_error_exception() throw();
 	int code;
 	std::string message;
-	const char* what() const noexcept
-	{
-		return message.c_str();
-	}
+	http_error_exception(int code, const std::string message);
+	virtual const char* what() const throw();
 };

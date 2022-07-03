@@ -22,13 +22,14 @@ class Server_T
 		int body_size_limit;
 		std::string root;
 		std::vector<std::string> cgi;
-		std::vector<std::string> server_name;
+		std::string server_name;
 		std::vector<std::pair<std::string, long> >ports;
 		std::map<std::string, Location_T> locations;
 		bool autoindex;
 
 		bool ipv4_set;
 		bool allowed_methods_set;
+		bool allowed_methods_inh;
 		bool index_set;
 		bool body_size_limit_set;
 		bool root_set;

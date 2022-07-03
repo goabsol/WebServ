@@ -3,7 +3,7 @@
 
 Location_T::Location_T()
 {
-	root = "";
+	root = "/Users/yihssan/Desktop/WebServ";
 	cgi = std::vector<std::string>();
 	allowed_methods = std::vector<std::string>();
 	autoindex = false;
@@ -18,12 +18,16 @@ Location_T::Location_T(const Location_T& location)
 	autoindex = location.autoindex;
 	upload_store = location.upload_store;
 	locations = location.locations;
-
+	redirection = location.redirection;
+	
 	autoindex_set = location.autoindex_set;
 	upload_store_set = location.upload_store_set;
 	allowed_methods_set = location.allowed_methods_set;
 	root_set = location.root_set;
 	index_set = location.index_set;
+	redirection_set = location.redirection_set;
+
+	allowed_methods_inh = location.allowed_methods_inh;
 }
 
 Location_T& Location_T::operator=(const Location_T& location)
@@ -34,13 +38,15 @@ Location_T& Location_T::operator=(const Location_T& location)
 	autoindex = location.autoindex;
 	upload_store = location.upload_store;
 	locations = location.locations;
-
+	redirection = location.redirection;
 
 	autoindex_set = location.autoindex_set;
 	upload_store_set = location.upload_store_set;
 	allowed_methods_set = location.allowed_methods_set;
 	root_set = location.root_set;
 	index_set = location.index_set;
+	redirection_set = location.redirection_set;
+	allowed_methods_inh = location.allowed_methods_inh;
 	return *this;
 }
 
@@ -50,12 +56,15 @@ Location_T::Location_T(std::vector<token_T> &tokens, size_t &i, Server_T *server
 	this->autoindex = server->autoindex;
 	this->index = server->index;
 	this->root = server->root;
+	this->redirection = std::make_pair(0, "");
 
 	this->autoindex_set = false;
 	this->upload_store_set = false;
 	this->allowed_methods_set = false;
 	this->root_set = false;
 	this->index_set = false;
+	this->redirection_set = false;
+	this->allowed_methods_inh = server->allowed_methods_inh;
 	i+=2;
 	while(tokens[i].type != RIGHTBRACE)
 	{
@@ -127,6 +136,19 @@ Location_T::Location_T(std::vector<token_T> &tokens, size_t &i, Server_T *server
 					print_and_exit(" autoindex must be on or off", tokens[i].line);
 				this->autoindex_set = true;
 			}
+			else if (tokens[i].value == "return")
+			{
+				if (this->redirection_set)
+				{
+					print_and_exit("Error: redirection already set", tokens[i].line);
+				}
+				this->redirection = parse_error_page(tokens, i, "redirection");
+				this->redirection_set = true;
+			}
+			else
+			{
+				print_and_exit("Error: invalid location parameter", tokens[i].line);
+			}
 		}
 		else if (tokens[i].type == LOCATION)
 		{
@@ -138,5 +160,9 @@ Location_T::Location_T(std::vector<token_T> &tokens, size_t &i, Server_T *server
 			print_and_exit(" invalid token", tokens[i].line);
 		}
 		i++;
+	}
+	if (this->root == "")
+	{
+		print_and_exit("Error: root not set", tokens[i].line);
 	}
 }

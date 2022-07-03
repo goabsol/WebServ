@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   socket.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anaselbaghdadi <anaselbaghdadi@student.    +#+  +:+       +#+        */
+/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/09 07:33:11 by arhallab          #+#    #+#             */
-/*   Updated: 2022/06/28 19:44:00 by anaselbaghd      ###   ########.fr       */
+/*   Updated: 2022/07/02 23:32:27 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@
 #include "tools.hpp"
 #include "conf_file.hpp"
 #include "./request/ClientRequest.hpp"
+#include "workshop.hpp"
 #define SOCKET int
 
 int sockinit(parser_T);

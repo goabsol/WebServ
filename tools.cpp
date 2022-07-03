@@ -150,7 +150,12 @@ http_error_exception::http_error_exception(int code, const std::string message)
 	this->message = message;
 }
 
-const char* http_error_exception::what() const noexcept
+const char* http_error_exception::what() const throw()
 {
-		return message.c_str();
+	return this->message.c_str();
+}
+
+http_error_exception::~http_error_exception() throw()
+{
+	return ;
 }

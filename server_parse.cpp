@@ -56,9 +56,12 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i, parser_T *parser)
 	this->root = parser->root;
 	this->allowed_methods = parser->allowed_methods;
 	this->body_size_limit = parser->body_size_limit;
+	this->server_name = "";
 	this->autoindex = parser->autoindex;
 	this->ipv4_set = false;
 	this->allowed_methods_set = false;
+	this->error_pages = parser->error_pages;
+	this->allowed_methods_inh = parser->allowed_methods_set;
 	this->body_size_limit_set = false;
 	this->autoindex_set = false;
 	this->root_set = false;
@@ -133,7 +136,9 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i, parser_T *parser)
 			}
 			else if (tokens[i].value == "error_page")
 			{
-				this->error_pages.insert(parse_error_page(tokens,i));
+				std::pair<int, std::string> tmp_error = parse_error_page(tokens,i, "error page ");
+				this->error_pages[tmp_error.first] = tmp_error.second;
+
 			}
 			else if (tokens[i].value == "listen")
 			{
@@ -181,15 +186,12 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i, parser_T *parser)
 			else if (tokens[i].value == "server_name")
 			{
 				i++;
-				if (this->server_name.size() > 0)
+				if (this->server_name != "")
 				{
 					print_and_exit("server names already set", tokens[i].line);
 				}
-				while(tokens[i].type != SEMICOLON)
-				{
-					this->server_name.push_back(tokens[i].value);
-					i++;
-				}
+				this->server_name = tokens[i].value;
+				i++;
 			}
 			else if (tokens[i].value == "cgi")
 			{
@@ -255,6 +257,7 @@ Server_T::Server_T(const Server_T& server)
 	this->body_size_limit_set = server.body_size_limit_set;
 	this->index_set = server.index_set;
 	this->autoindex_set = server.autoindex_set;
+	this->allowed_methods_inh = server.allowed_methods_inh;
 }
 
 Server_T& Server_T::operator=(const Server_T& server)
@@ -274,19 +277,10 @@ Server_T& Server_T::operator=(const Server_T& server)
 	this->body_size_limit_set = server.body_size_limit_set;
 	this->index_set = server.index_set;
 	this->autoindex_set = server.autoindex_set;
+	this->allowed_methods_inh = server.allowed_methods_inh;
 	return *this;
 }
 
 Server_T::~Server_T()
 {
-	this->root = "";
-	this->body_size_limit = 0;
-	this->allowed_methods.clear();
-	this->index.clear();
-	this->error_pages.clear();
-	this->server_name.clear();
-	this->cgi.clear();
-	this->autoindex = false;
-	this->locations.clear();
-	this->ports.clear();
 }

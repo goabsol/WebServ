@@ -45,7 +45,7 @@ token_T& token_T::operator=(const token_T& tok)
 	return *this;
 }
 
-std::pair<int,std::string> parse_error_page(std::vector<token_T> tokens,  size_t &i)
+std::pair<int,std::string> parse_error_page(std::vector<token_T> tokens,  size_t &i, std::string msg)
 {
 	int code;
 	std::string page;
@@ -55,16 +55,16 @@ std::pair<int,std::string> parse_error_page(std::vector<token_T> tokens,  size_t
 	}
 	catch (const std::exception& e)
 	{
-		print_and_exit(" error_pages must be an integer", tokens[i].line);
+		print_and_exit(" " + msg + " must be an integer", tokens[i].line);
 	}
-	if (code < 0 || code > 599)
+	if (code < 200 || code > 599)
 	{
-		print_and_exit(" error_pages must be between 0 and 599", tokens[i].line);
+		print_and_exit(" " + msg + " must be between 0 and 599", tokens[i].line);
 	}
 	i++;
 	if (tokens[i].type != VALUE)
 	{
-		print_and_exit(" error_page code must be followed by a page name", tokens[i].line);
+		print_and_exit(" " + msg + "code must be followed by a page name", tokens[i].line);
 	}
 	page = tokens[i].value;
 	return (std::make_pair(code, page));
