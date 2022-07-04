@@ -1,9 +1,18 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   workshop.cpp                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2022/07/04 01:31:07 by arhallab          #+#    #+#             */
+/*   Updated: 2022/07/04 02:44:35 by arhallab         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 
 
 #include "workshop.hpp"
-#include <fstream>
-#include <sys/stat.h>
-#include <sys/types.h>
 
 std::string craftResponse(ClientRequest &request, int status_code, std::string message)
 {
@@ -15,6 +24,8 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 
 	std::fstream file;
 	std::string file_name;
+
+
 	if (status_code > 399)
 	{
 
@@ -27,6 +38,7 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 		{
 			file_name = "./pages/" + std::to_string(status_code) + ".html";
 		}
+		goto end;
 	}
 	else if (request.current_location.redirection.first != 0)
 	{
@@ -34,20 +46,113 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 	}
 	else
 	{
-		struct stat file_info;
-		std::cout << request.current_location.root+request.current_location_path << std::endl;
-		lstat((request.current_location.root + request.current_location_path).c_str(), &file_info);
-		if ( (file_info.st_mode & S_IFMT) == S_IFDIR)
+		file_name = request.current_location.root+request.requestURI;
+	}
+
+
+	if(request.method == "GET")
+	{
+		get:
+		if(getRequestedResource(file_name, file))
 		{
-			file_name = request.current_location.root+request.requestURI + "index.html";
+			if (getResourceType(file_name) == FILE)
+			{
+				hi:
+				std::string content_type;
+				gotCGI(request.current_location, content_type, request.method);
+				RF["Content-Type"] = content_type;
+			}
+			else
+			{
+				if (*(request.requestURI.end()-1) != '/')
+					return(craftResponse(request, 301, "Moved Permanently"));
+				std::string index;
+				if (indexInDir(request.current_location.index, request.requestURI, index))
+				{
+					file_name += index;
+					goto hi;
+				}
+				else if (request.method == "GET" && request.current_location.autoindex)
+				{
+					//list that shit
+				}
+				else
+				{
+					return(craftResponse(request, 403, "Forbidden"));
+				}
+			}
 		}
 		else
 		{
-			file_name = request.current_location.root+request.requestURI;
-		}  
-		
+			return(craftResponse(request, 404, "Not Found"));
+		}
 	}
-	file.open(file_name, std::ios::in);
+	else if (request.method == "POST")
+	{
+		if (request.current_location.upload_store_set)
+		{
+			//upload
+		}
+		else
+		{
+			goto get;
+		}
+	}
+	else if (request.method == "DELETE")
+	{
+		if(getRequestedResource(file_name, file))
+		{
+			if (getResourceType(file_name) == FILE)
+			{
+				std::string content_type = "text/html";
+				if(!gotCGI(request.current_location, content_type, request.method))
+					return(craftResponse(request, 204, "No Content"));
+				RF["Content-Type"] = content_type;
+			}
+			else
+			{
+				if (*(request.requestURI.end() - 1) != '/')
+					return(craftResponse(request, 409, "Conflict"));
+				std::string content_type = "text/html";
+				if(gotCGI(request.current_location, content_type, request.method))
+				{
+					std::string index;
+					if (indexInDir(request.current_location.index, request.requestURI, index))
+					{
+						file_name += index;
+					}
+					else
+					{
+						return(craftResponse(request, 403, "Forbidden"));
+					}
+				}
+				else
+				{
+					if (emptyDir(file_name))
+						return(craftResponse(request, 204, "No Content"));
+					else
+					{
+						if (access(file_name.c_str(), W_OK))
+							return(craftResponse(request, 500, "Internal Server Error"));
+						else
+							return(craftResponse(request, 403, "Forbidden"));
+					}
+				}
+				
+				RF["Content-Type"] = content_type;
+			}
+		}
+		else
+		{
+			return(craftResponse(request, 404, "Not Found"));
+		}
+	}
+	else //maybe add 501 Not Implemented maybe not maybe just friends
+	{
+		return(craftResponse(request, 405, "Method Not Allowed"));
+	}
+
+	end:
 	std::cout << "file : " << file_name << std::endl;
 	if (file.is_open())
 	{
@@ -74,4 +179,71 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 	//body
 	response += message;
 	return response;
+}
+
+bool getRequestedResource(std::string &resource, std::fstream &file)
+{
+	file.open(resource, std::ios::in);
+	if (file.is_open())
+		return true;
+	return false;
+}
+
+bool getResourceType(std::string &path)
+{
+	struct stat file_info;
+	lstat(path.c_str(), &file_info);
+	if ( (file_info.st_mode & S_IFMT) == S_IFDIR)
+		return DIRECTORY;
+	return FILE;
+}
+
+bool indexInDir(std::vector<std::string> &indexes, std::string &dir, std::string &found)
+{
+	for (std::vector<std::string>::iterator it = indexes.begin(); it != indexes.end(); it++)
+	{
+		std::fstream file;
+		file.open(dir + *it, std::ios::in);
+		if (file.is_open())
+		{
+			file.close();
+			return true;
+		}
+	}
+	return false;
+}
+
+bool gotCGI(Location_T &location, std::string &tail, std::string &method)
+{
+	//CGI that shit (plz )
+	return(true);
+}
+
+bool emptyDir(std::string &dir)
+{
+	struct stat file_info;
+	lstat(dir.c_str(), &file_info);
+	if ( (file_info.st_mode & S_IFMT) == S_IFDIR)
+	{
+		DIR *dp;
+		struct dirent *ep;
+		dp = opendir(dir.c_str());
+		if (dp != NULL)
+		{
+			while ((ep = readdir(dp)))
+			{
+				if (strcmp(ep->d_name, ".") != 0 && strcmp(ep->d_name, "..") != 0)
+				{
+					std::string file_name = dir + ep->d_name;
+					if (getResourceType(file_name) == FILE)
+						remove(file_name.c_str());
+					else
+						return false;
+				}
+			}
+			closedir(dp);
+		}
+		return true;
+	}
+	return false;
 }
