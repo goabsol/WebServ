@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/03 02:05:45 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/04 05:39:04 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -139,20 +139,45 @@ void ClientRequest::clearData()
 /* ************************************************************************** */
 
 
+bool sortlocation(std::pair<std::string, Location_T>  &a, std::pair<std::string, Location_T> &b)
+{
+	return a.first < b.first;
+}
+
 bool ClientRequest::locationExists(std::string &request)
 {
-	if (this->server.locations.find(request) != this->server.locations.end())
+	// if (this->server.locations.find(request) != this->server.locations.end())
+	// 	return true;
+	std::vector<std::pair<std::string, Location_T> > valid_locations;
+	
+	for (std::map<std::string, Location_T>::iterator it = this->server.locations.begin(); it != this->server.locations.end(); it++)
+	{
+		if (!strncmp(it->first.c_str(), request.c_str(), it->first.length()))
+		{
+			std::cout << "Found location: " << it->first << std::endl;
+			valid_locations.push_back(std::make_pair(it->first, it->second));
+		}
+	}
+	if (valid_locations.size())
+	{
+		sort(valid_locations.begin(), valid_locations.end(), sortlocation); 
+		this->current_location = valid_locations.back().second;
+		this->current_location_path = valid_locations.back().first;
+		std::cout << "Taken location :" << valid_locations.back().first << std::endl;
 		return true;
+	}
 	return false;
 }
 
 bool ClientRequest::autorised_method(std::string &method)
 {
+		
 	if (this->current_location.allowed_methods_inh == false && this->current_location.allowed_methods_set == false)
 		return true;
 	std::vector<std::string> current_methods = this->current_location.allowed_methods;
 	if (std::find(current_methods.begin(), current_methods.end(), method) != current_methods.end())
 		return true;
+	
 	return false;
 }
 
@@ -233,26 +258,34 @@ void ClientRequest::checkLineValidity(std::string line)
 			throw http_error_exception(404, "Not Found");
 			return ;
 		}
-		this->current_location = this->server.locations[requestline[1]];
-		this->current_location_path = requestline[1];
-		if (this->server.locations[requestline[1]].redirection_set)
+
+			
+		// this->current_location = this->server.locations[requestline[1]];
+		// this->current_location_path = requestline[1];
+		if (this->server.locations[this->current_location_path].redirection_set)
 		{
+			
 			throw http_error_exception(301, "Moved Permanently");
+					
 			// throw http_redirect_exception((this->server.locations[requestline[1]].redirection).first, this->server.locations[requestline[1]].redirection.second, line + "\r\n" + this->data);
 			return ;
 		}
-		else if (!autorised_method(this->method))
+		
+		else if ( !autorised_method(this->method))
 		{
 			this->hasError = true;
 			this->errorMessage = "Error: Request line method not autorised";
 			/* ERROR 405 */
+			
 			throw http_error_exception(405, "Method Not Allowed");
 			return ;
 		}
 		else
 		{
+		
 			this->requestURI = requestline[1];
 		}
+		
 		if (requestline[2] != "HTTP/1.1")
 		{
 			this->hasError = true;
@@ -384,7 +417,6 @@ void ClientRequest::storeRequest()
 		{
 			if (this->data.find("\r\n") != std::string::npos)
 			{
-				std::cout << "dshjbcksjbd" << std::endl;
 				this->data = this->data.substr(this->data.find("\r\n") + 2);
 			}
 		}

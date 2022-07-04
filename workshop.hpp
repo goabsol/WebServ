@@ -22,7 +22,7 @@ bool getResourceType(std::string &path);
 bool indexInDir(std::vector<std::string> &indexes, std::string &dir, std::string &found);
 bool getAutoIndex(Location_T &location);
 bool gotCGI(Location_T &location, std::string &tail, std::string &method);
-
+std::string makeautoindex(std::string &root, std::string &dir);
 
 
 bool emptyDir(std::string &dir);

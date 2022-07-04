@@ -3,7 +3,9 @@
 
 Location_T::Location_T()
 {
-	root = "/Users/yihssan/Desktop/WebServ";
+	char tmp[256];
+    getcwd(tmp, 256);
+	root = tmp;
 	cgi = std::vector<std::string>();
 	allowed_methods = std::vector<std::string>();
 	autoindex = false;
@@ -19,6 +21,7 @@ Location_T::Location_T(const Location_T& location)
 	upload_store = location.upload_store;
 	locations = location.locations;
 	redirection = location.redirection;
+	index = location.index;
 	
 	autoindex_set = location.autoindex_set;
 	upload_store_set = location.upload_store_set;
@@ -39,6 +42,7 @@ Location_T& Location_T::operator=(const Location_T& location)
 	upload_store = location.upload_store;
 	locations = location.locations;
 	redirection = location.redirection;
+	index = location.index;
 
 	autoindex_set = location.autoindex_set;
 	upload_store_set = location.upload_store_set;
