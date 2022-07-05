@@ -152,6 +152,7 @@ bool ClientRequest::locationExists(std::string &request)
 	
 	for (std::map<std::string, Location_T>::iterator it = this->server.locations.begin(); it != this->server.locations.end(); it++)
 	{
+		std::cout << "location: " << it->first << " match " << request << std::endl;
 		if (!strncmp(it->first.c_str(), request.c_str(), it->first.length()))
 		{
 			std::cout << "Found location: " << it->first << std::endl;

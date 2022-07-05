@@ -38,6 +38,17 @@ std::string makeautoindex(std::string &root, std::string &dir)
 	return autoindex_page;
 }
 
+std::string getFileType(std::string const &file_name)
+{
+	MimeType mime_type;
+	if (file_name.find_last_of(".") != std::string::npos)
+	{
+		std::string fn = file_name.substr(file_name.find_last_of("."));
+		return mime_type.get_mime_type(fn);
+	}
+	return "text/html";
+}
+
 std::string craftResponse(ClientRequest &request, int status_code, std::string message)
 {
 
@@ -54,6 +65,7 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 
 		if (request.getServer().error_pages.find(status_code) != request.getServer().error_pages.end())
 		{
+			std::cout << "Error page found" << std::endl;
 			file_name = request.current_location.root + request.getServer().error_pages[status_code];
 			std::cout << "Error page: " << file_name << std::endl;
 		}
@@ -67,6 +79,10 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 	else if (request.current_location.redirection.first != 0)
 	{
 		file_name = request.current_location.redirection.second;
+		request.requestURI = file_name;
+		response = "HTTP/1.1 301 Moved Permanently\r\n";
+		response += "Location: " + file_name + "\r\n";
+		goto send;
 	}
 	else
 	{
@@ -82,8 +98,8 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 			{
 			hi:
 				std::string content_type = "text/html";
+				RF["Content-Type"] = getFileType(file_name);
 				gotCGI(request.current_location, content_type, request.method);
-				RF["Content-Type"] = content_type;
 			}
 			else
 			{
@@ -132,9 +148,9 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 			if (getResourceType(file_name) == FILE)
 			{
 				std::string content_type = "text/html";
+				RF["Content-Type"] = getFileType(file_name);
 				if (!gotCGI(request.current_location, content_type, request.method))
 					return (craftResponse(request, 204, "No Content"));
-				RF["Content-Type"] = content_type;
 			}
 			else
 			{
@@ -194,6 +210,7 @@ end:
 		}
 		file.close();
 	}
+send:
 	if (RF.find("Content-Type") == RF.end())
 	{
 		response += "Content-Type: text/html\r\n";
@@ -205,6 +222,7 @@ end:
 	response += "Content-Length: " + std::to_string(message.length()) + "\r\n"; // for body
 	response += "Connection: " + (RF.find("Connection") == RF.end() ? RF["Connection"] : "Keep-Alive") + "\r\n";
 	response += "\r\n";
+	std::cout << "Response: " << response << std::endl;
 	// body
 	response += message;
 	
@@ -259,6 +277,7 @@ bool indexInDir(std::vector<std::string> &indexes, std::string &dir, std::string
 bool gotCGI(Location_T &location, std::string &tail, std::string &method)
 {
 	// CGI that shit (plz )
+	
 	return (true);
 }
 
