@@ -21,6 +21,7 @@ class Location_T
 		std::string upload_store;
 		std::map<std::string, Location_T> locations;
 		std::pair<int, std::string> redirection;
+		std::map<int, std::string> error_pages;
 
 		bool autoindex_set;
 		bool upload_store_set;

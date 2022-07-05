@@ -238,6 +238,7 @@ void ClientRequest::checkLineValidity(std::string line)
 	if (this->requestPosition == 0)
 	{
 		std::vector<std::string> requestline = split(line, ' ');
+		std::cout << "FCK U " << line  << std::endl;
 		if (requestline.size() != 3 || countChr(line, ' ') != 2 || !validMethod(requestline[0]) || !validURI(requestline[1]))
 		{
 			throw http_error_exception(400, "Bad Request");
@@ -256,11 +257,11 @@ void ClientRequest::checkLineValidity(std::string line)
 		else if (!locationExists(requestline[1]))
 		{
 			/* ERROR 404 */
+			
 			throw http_error_exception(404, "Not Found");
 			return ;
 		}
 
-			
 		// this->current_location = this->server.locations[requestline[1]];
 		// this->current_location_path = requestline[1];
 		if (this->server.locations[this->current_location_path].redirection_set)

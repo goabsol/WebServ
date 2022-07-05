@@ -63,10 +63,10 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 	if (status_code > 399)
 	{
 
-		if (request.getServer().error_pages.find(status_code) != request.getServer().error_pages.end())
+		if (request.current_location.error_pages.find(status_code) != request.current_location.error_pages.end())
 		{
 			std::cout << "Error page found" << std::endl;
-			file_name = request.current_location.root + request.getServer().error_pages[status_code];
+			file_name = request.current_location.root + request.current_location.error_pages[status_code];
 			std::cout << "Error page: " << file_name << std::endl;
 		}
 		else
@@ -105,14 +105,19 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 			{
 				if (*(request.requestURI.end() - 1) != '/')
 				{
+					std::cout << "redirecting : " << request.requestURI << std::endl;
 					request.requestURI += "/";
-					return (craftResponse(request, 301, "Moved Permanently"));
+					response = "HTTP/1.1 301 Moved Permanently\r\n";
+					response += "Location: " + request.requestURI + "\r\n";
+					goto send;
 				}
 				std::string index;
 				if (indexInDir(request.current_location.index, file_name, index))
 				{
 					file_name += index;
-					goto hi;
+					request.requestURI += index;
+					std::cout << "folder : " << file_name << std::endl;
+					goto get;
 				}
 				else if (request.method == "GET" && request.current_location.autoindex)
 				{
@@ -263,13 +268,13 @@ bool indexInDir(std::vector<std::string> &indexes, std::string &dir, std::string
 	for (std::vector<std::string>::iterator it = indexes.begin(); it != indexes.end(); it++)
 	{
 		std::fstream file;
-		file.open(dir + *it, std::ios::in);
-		if (file.is_open())
+		std::string file_name = dir + *it;
+		if (getRequestedResource(file_name, file))
 		{
-			file.close();
 			found = *it;
 			return true;
 		}
+		
 	}
 	return false;
 }
