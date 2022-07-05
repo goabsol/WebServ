@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/04 05:39:04 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/05 09:48:42 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@ const std::string tmp[] = {"GET",
 						   "OPTIONS",
 						   "CONNECT",
 						   "TRACE"};
+
 const std::vector<std::string> v_methods(tmp,tmp+8);
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
@@ -324,13 +325,53 @@ void ClientRequest::checkLineValidity(std::string line)
 				throw http_error_exception(501, "Not Implemented");
 				return ;
 			}
-			while(1)
+			bool size_found = false;
+			int size;
+			while(line != "0")
 			{
-			int length = std::stoi(line, nullptr, 16);
-			this->data = this->data.substr(line.length() + 2);
-			this->body += this->data.substr(0, length);
+				if (this->data.find("\r\n") != std::string::npos)
+				{
+					line = this->data.substr(0, this->data.find("\r\n"));
+					std::cout << "hihi " << line << std::endl;
+					this->data = this->data.substr(this->data.find("\r\n") + 2);
+					if (!size_found)
+					{
+						size_found = true;
+						size = std::stoi(line, nullptr, 16);
+						std::cout << "size " << size << std::endl;
+					}
+					else
+					{
+						size -= line.length();
+						if (size <= 0)
+							size_found = false;
+						this->body += line;
+					}
+				}
+				else if (size > 0 || !size_found)
+				{
+					char *buff = new char[1024];
+					size_t bytes_read = recv(Socket, buff, 1024, 0);
+					std::cout << "buff: " << buff << std::endl;
+					if (bytes_read > 0)
+					{
+						this->data += std::string(buff, buff + bytes_read);
+						size -= bytes_read;
+					}
+					else if(!bytes_read)
+					{
+						this->closeConnection = true;
+						return;
+					}
+					else
+					{
+						this->hasError = true;
+						this->errorMessage = "Error: recv() failed";
+						return;
+					}
+				}
 			}
-			
+			std::cout << "body: " << this->body << std::endl;
 		}
 		else if (requestFields.find("Content-Length") != requestFields.end())
 		{

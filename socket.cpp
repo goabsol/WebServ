@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/09 07:34:47 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/03 01:36:20 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/05 03:43:29 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,9 +39,9 @@ int    sockinit(parser_T parser)
 				std::cout << "setsockopt(SO_REUSEADDR) failed" << std::endl;
 			memeset(&johnny, 0, sizeof(johnny));
 			johnny.sin_family = AF_INET;
-			std::cout << parser.servers[i].ports[j].second << " " << parser.servers[i].ports[j].first << std::endl;
-			johnny.sin_port = htons(parser.servers[i].ports[j].second);
+			// std::cout << parser.servers[i].ports[j].second << " " << parser.servers[i].ports[j].first << std::endl;
 			johnny.sin_addr.s_addr = inet_addr(parser.servers[i].ports[j].first.c_str());
+			johnny.sin_port = htons(parser.servers[i].ports[j].second);
 			//bind socket to port
 			if (bind(server_fd, (struct sockaddr *)&johnny, sizeof(johnny)) < 0)
 			{
@@ -100,7 +100,7 @@ int    sockinit(parser_T parser)
 					if (client_fd > max_fd)
 						max_fd = client_fd;
 					m_socket_to_server[client_fd] = m_socket_to_server[i];
-					std::cout << i << " " << client_fd << std::endl;
+					// std::cout << i << " " << client_fd << std::endl;
 					clients[client_fd] = ClientRequest(client_fd, m_socket_to_server[i]);
 					break;
 				}
