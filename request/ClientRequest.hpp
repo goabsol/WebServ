@@ -50,6 +50,8 @@ class ClientRequest
 		Server_T server;
 		Location_T current_location;
 		std::string current_location_path;
+		int size;
+		bool size_set;
 };
 
 std::ostream &			operator<<( std::ostream & o, ClientRequest const & i );

@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/06 16:14:31 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/06 18:39:00 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ ClientRequest::ClientRequest( const ClientRequest & src )
 	*this = src;
 }
 
-ClientRequest::ClientRequest(int socket, Server_T &server) : Socket(socket), data(""), requestPosition(0), hasError(false), isDone(false), closeConnection(false), server(server), current_location(Location_T()), body("")
+ClientRequest::ClientRequest(int socket, Server_T &server) : Socket(socket), data(""), requestPosition(0), hasError(false), isDone(false), closeConnection(false), server(server), current_location(Location_T()), body(""), size(0), size_set(false)
 {
 }
 
@@ -131,6 +131,8 @@ void ClientRequest::setIsDone(bool isDone)
 	this->isDone = isDone;
 	this->requestPosition = 0;
 	this->hasError = false;
+	this->size = 0;
+	this->size_set = false;
 }
 
 void ClientRequest::clearData()
@@ -188,7 +190,14 @@ void ClientRequest::parseRequest(std::string &line)
 	if (line == "")
 	{
 		this->requestPosition = 2;
-		line = this->data;
+		std::cout << "Request is done " << this->data << std::endl;
+		
+		line = this->data.substr(this->data.find("\r\n") + 2);
+	}
+	if (this->requestPosition == 2)
+	{
+		std::cout << "DATA " << this->data << std::endl;
+
 	}
 	this->checkLineValidity(line);
 }
@@ -284,44 +293,46 @@ void ClientRequest::checkLineValidity(std::string line)
 	}
 	else
 	{
-		if (this->data.find("\r\n") != std::string::npos)
-		{
-			this->data = this->data.substr(this->data.find("\r\n") + 2);
-		}
+		// if (this->data.find("\r\n") != std::string::npos)
+		// {
+		// 	this->data = this->data.substr(this->data.find("\r\n") + 2);
+		// }
 		if (requestFields.find("Transfer-Encoding") != requestFields.end())
 		{
 			if (requestFields["Transfer-Encoding"] != "chunked")
 			{
-				this->hasError = true;
-				this->errorMessage = "Error: Transfer-Encoding not chunked";
-				/* 501 ERROR */
 				throw http_error_exception(501, "Not Implemented");
-				return ;
 			}
-			bool size_found = false;
-			int size;
-			while (line != "0")
+			if (this->size_set && line.length() > this->size)
 			{
+				this->size = 0;
+				this->size_set = false;
+				throw http_error_exception(400, "Bad Request");
+			}
+			std::cout << "hihi1 |" << line << "|" <<  std::endl;
+			while (line != "0" && line != "")
+			{
+				std::cout << "hihi2 " << line << " hihi " << this->data << std::endl;
 				if (this->data.find("\r\n") != std::string::npos)
 				{
+					std::cout << "hihi3 " << line << std::endl;
 					line = this->data.substr(0, this->data.find("\r\n"));
-					std::cout << "hihi " << line << std::endl;
 					this->data = this->data.substr(this->data.find("\r\n") + 2);
-					if (!size_found)
+					if (!this->size_set)
 					{
-						size_found = true;
-						size = std::stoi(line, nullptr, 16);
+						this->size_set = true;
+						this->size = std::stoi(line, nullptr, 16);
 						std::cout << "size " << size << std::endl;
 					}
 					else
 					{
-						size -= line.length();
-						if (size <= 0)
-							size_found = false;
+						this->size -= line.length();
+						if (this->size <= 0)
+							this->size_set = false;
 						this->body += line;
 					}
 				}
-				else if (size > 0 || !size_found)
+				else if (this->size > 0 || !this->size_set)
 				{
 					break;
 				}
@@ -330,18 +341,16 @@ void ClientRequest::checkLineValidity(std::string line)
 					this->setIsDone(true);
 				}
 			}
+			if (line == "0")
+			{
+				this->setIsDone(true);
+			}
 			std::cout << "body: " << this->body << std::endl;
 		}
 		else if (requestFields.find("Content-Length") != requestFields.end())
 		{
-			std::cout << "content-length: " << requestFields["Content-Length"] << std::endl;
 			long length = std::stoi(requestFields["Content-Length"]) - this->body.length();
-			if (length <= 0 || std::stoi(requestFields["Content-Length"]) == 0)
-			{
-				// std::cout << "body : " << this->body << std::endl;
-				this->setIsDone(true);
-				return ;
-			}
+			std::cout << "content-length: " << requestFields["Content-Length"] << " line " << line << std::endl;
 			if (length > this->server.body_size_limit)
 			{
 				this->hasError = true;
@@ -352,6 +361,14 @@ void ClientRequest::checkLineValidity(std::string line)
 			}
 			this->body += this->data.substr(0, std::min(length, (long)this->data.length()));
 			this->data = this->data.substr(std::min(length, (long)this->data.length()));
+			length -= line.length();
+			if (length <= 0 || std::stoi(requestFields["Content-Length"]) == 0)
+			{
+				std::cout << "body : " << this->body << std::endl;
+				this->setIsDone(true);
+				return ;
+			}
+			std::cout << "body : " << this->body << std::endl;
 		}
 		else
 		{
@@ -416,7 +433,7 @@ void ClientRequest::storeRequest()
 			return ;
 		}
 		std::cout << "line: |" << line << "|"<< std::endl;
-		if (line == "")
+		if (this->isDone)
 		{
 			
 			return ;

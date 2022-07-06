@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/04 01:31:07 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/06 15:38:45 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/06 17:30:27 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 	message = "";
 	if (status_code > 399)
 	{
-
+		RF["Connection"] = "close";
 		if (request.current_location.error_pages.find(status_code) != request.current_location.error_pages.end())
 		{
 			std::cout << "Error page found" << std::endl;
