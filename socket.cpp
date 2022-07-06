@@ -119,7 +119,10 @@ int    sockinit(parser_T parser)
 						try
 						{
 							clients[i].storeRequest();
+							if (clients[i].getIsDone())
+							{
 							m_socket_to_response[i] = craftResponse(clients[i]);
+							}
 						}
 						catch(http_error_exception& e)
 						{

@@ -239,7 +239,6 @@ void ClientRequest::checkLineValidity(std::string line)
 	if (this->requestPosition == 0)
 	{
 		std::vector<std::string> requestline = split(line, ' ');
-		std::cout << "FCK U " << line  << std::endl;
 		if (requestline.size() != 3 || countChr(line, ' ') != 2 || !validMethod(requestline[0]) || !validURI(requestline[1]))
 		{
 			throw http_error_exception(400, "Bad Request");
@@ -306,10 +305,22 @@ void ClientRequest::checkLineValidity(std::string line)
 	}
 	else if (requestPosition == 1)
 	{
-		char *l = strdup(line.c_str());
-		std::string p(strtok(l, ": "));
-		std::string v(strtok(NULL, ": "));
-		requestFields[p]= v;
+		if (line.find(": ") != std::string::npos)
+		{
+			char *l = strdup(line.c_str());
+			std::string p(strtok(l, ": "));
+			std::string v(strtok(NULL, ": "));
+			// CHECK V WITH P
+			requestFields[p]= v;
+		}
+		else
+		{
+			this->hasError = true;
+			this->errorMessage = "Error: Request line field not valid";
+			/* ERROR 400 */
+			throw http_error_exception(400, "Bad Request");
+			return ;
+		}
 		// std::cout << p << " : " << v << std::endl;
 	}
 	else
@@ -428,7 +439,7 @@ void ClientRequest::storeRequest()
 	memeset(buffer, 0, 1024);
     size_t bytes_read = 0;
     std::vector<std::string> lines;
-    bytes_read = recv(this->Socket, buffer, 1024, 0); 
+    bytes_read = recv(this->Socket, buffer, 1024, 0);
 	if (bytes_read > 0)
 	{
 		this->data += std::string(buffer, buffer + bytes_read);
@@ -468,10 +479,16 @@ void ClientRequest::storeRequest()
 		{
 			std::cerr << "Error: " << this->data << std::endl;
 		}
-		}
 		if (this->hasError == true)
 		{
 			return ;
 		}
+		std::cout << "line: |" << line << "|"<< std::endl;
+		if (line == "")
+		{
+			
+			return ;
+		}
+	}
 	// std::cout << this->data << std::endl
 }
