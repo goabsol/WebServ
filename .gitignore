@@ -1,7 +1,6 @@
 a.out
 .vscode
 .DS_Store
-.gitignore
 test_parsing.conf
 a.out.dSYM
 nginx.conf
@@ -9,3 +8,4 @@ tofix
 webserv
 *.o
 *.mp4
+main.cpp
