@@ -6,12 +6,11 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/04 01:31:07 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/04 06:00:24 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/06 15:38:45 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "workshop.hpp"
-#include <dirent.h>
 
 std::string makeautoindex(std::string &root, std::string &dir)
 {
@@ -204,6 +203,7 @@ end:
 	file.open(file_name, std::fstream::in);
 	if (file && message == "")
 	{
+	std::cout<<"end"<<std::endl;
 		std::string line;
 		message = "";
 		while (1)
@@ -227,9 +227,9 @@ send:
 	response += "Content-Length: " + std::to_string(message.length()) + "\r\n"; // for body
 	response += "Connection: " + (RF.find("Connection") == RF.end() ? RF["Connection"] : "Keep-Alive") + "\r\n";
 	response += "\r\n";
-	std::cout << "Response: " << response << std::endl;
 	// body
 	response += message;
+	std::cout << "Response: "<< std::endl << response << std::endl;
 	
 	return response;
 }

@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/05 09:48:42 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/06 16:14:31 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ ClientRequest::ClientRequest( const ClientRequest & src )
 	*this = src;
 }
 
-ClientRequest::ClientRequest(int socket, Server_T &server) : Socket(socket), data(""), requestPosition(0), hasError(false), isDone(false), closeConnection(false), server(server), current_location(Location_T())
+ClientRequest::ClientRequest(int socket, Server_T &server) : Socket(socket), data(""), requestPosition(0), hasError(false), isDone(false), closeConnection(false), server(server), current_location(Location_T()), body("")
 {
 }
 
@@ -185,53 +185,12 @@ bool ClientRequest::autorised_method(std::string &method)
 
 void ClientRequest::parseRequest(std::string &line)
 {
-	// std::cout << "line: " << line << std::endl;
 	if (line == "")
 	{
 		this->requestPosition = 2;
 		line = this->data;
 	}
 	this->checkLineValidity(line);
-		// if (this->data.find("\r\n") != std::string::npos)
-		// {
-		// 	if (this->requestPosition < 2)
-		// 		this->requestPosition++;
-		// 	line = this->data.substr(0, this->data.find("\r\n"));
-		// 	this->checkLineValidity(line);
-		// }
-		// //parse the line
-		// if (this->requestPosition == 3 || (this->requestPosition == 2  && this->data.find("\r\n")==0))
-		// {
-		// 	this->requestPosition = 3;
-		// 	std::map<std::string, std::string>::iterator contentLength = requestFields.find("Content-Length");
-		// 	//std::map<std::string, std::string>::iterator transferEncoding = requestFields.find("Transfer-Encoding");
-		// 	if (contentLength != requestFields.end())
-		// 	{
-		// 		std::cout << this->data << " ------l-o" << std::endl;
-		// 		size_t length = std::stoi(contentLength->second);
-		// 		char *buff = new char[length];
-		// 		size_t bytes_read = recv(Socket, buff, length, 0);
-			// 	std::cout << bytes_read << std::endl;
-			// 	if (bytes_read > 0)
-			// 	{
-			// 		this->body += std::string(buff, buff + length);
-			// 		this->setIsDone(true);
-			// 	}
-			// 	else if(!bytes_read)
-			// 	{
-			// 		this->closeConnection = true;
-			// 	}
-			// 	else
-			// 	{
-			// 		this->hasError = true;
-			// 		this->errorMessage = "Error: recv() failed";
-			// 	}
-			// }
-			// else
-			// {
-			// 	this->setIsDone(true);
-			// }
-		// }
 }
 
 void ClientRequest::checkLineValidity(std::string line)
@@ -329,7 +288,7 @@ void ClientRequest::checkLineValidity(std::string line)
 			}
 			bool size_found = false;
 			int size;
-			while(line != "0")
+			while (line != "0")
 			{
 				if (this->data.find("\r\n") != std::string::npos)
 				{
@@ -352,32 +311,25 @@ void ClientRequest::checkLineValidity(std::string line)
 				}
 				else if (size > 0 || !size_found)
 				{
-					char *buff = new char[1024];
-					size_t bytes_read = recv(Socket, buff, 1024, 0);
-					std::cout << "buff: " << buff << std::endl;
-					if (bytes_read > 0)
-					{
-						this->data += std::string(buff, buff + bytes_read);
-						size -= bytes_read;
-					}
-					else if(!bytes_read)
-					{
-						this->closeConnection = true;
-						return;
-					}
-					else
-					{
-						this->hasError = true;
-						this->errorMessage = "Error: recv() failed";
-						return;
-					}
+					break;
+				}
+				else
+				{
+					this->setIsDone(true);
 				}
 			}
 			std::cout << "body: " << this->body << std::endl;
 		}
 		else if (requestFields.find("Content-Length") != requestFields.end())
 		{
-			long length = std::stoi(requestFields["Content-Length"]);
+			std::cout << "content-length: " << requestFields["Content-Length"] << std::endl;
+			long length = std::stoi(requestFields["Content-Length"]) - this->body.length();
+			if (length <= 0 || std::stoi(requestFields["Content-Length"]) == 0)
+			{
+				// std::cout << "body : " << this->body << std::endl;
+				this->setIsDone(true);
+				return ;
+			}
 			if (length > this->server.body_size_limit)
 			{
 				this->hasError = true;
@@ -386,33 +338,13 @@ void ClientRequest::checkLineValidity(std::string line)
 				throw http_error_exception(413, "Request Entity Too Large");
 				return ;
 			}
-			this->body = this->data.substr(0, std::min(length, (long)this->data.length()));
+			this->body += this->data.substr(0, std::min(length, (long)this->data.length()));
 			this->data = this->data.substr(std::min(length, (long)this->data.length()));
-			length -= this->body.length();
-			while(length > 0)
-			{
-				char *buff = new char[length];
-				size_t bytes_read = recv(Socket, buff, length, 0);
-				if (bytes_read > 0)
-				{
-					this->body += std::string(buff, buff + length);
-					length -= bytes_read;
-				}
-				else if(!bytes_read)
-				{
-					this->closeConnection = true;
-					return;
-				}
-				else
-				{
-					this->hasError = true;
-					this->errorMessage = "Error: recv() failed";
-					return;
-				}
-			}
-			std::cout << "body : " << this->body << std::endl;
 		}
-		this->setIsDone(true);
+		else
+		{
+			this->setIsDone(true);
+		}
 	}
 }
 
