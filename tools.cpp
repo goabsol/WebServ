@@ -138,7 +138,7 @@ bool validURI(std::string &uri)
 {
 	for(size_t i = 0; i < uri.size(); i++)
 	{
-		if (std::string("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ._~:/?#[]@!$&'()*+,;=%").find(uri[i]) == std::string::npos)
+		if (std::string("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ._~:/?#[]@!$&'()*+,;=%-").find(uri[i]) == std::string::npos)
 			return false;
 	}
 	return true;
@@ -158,4 +158,17 @@ const char* http_error_exception::what() const throw()
 http_error_exception::~http_error_exception() throw()
 {
 	return ;
+}
+
+void hexaToAscii(std::string &str)
+{
+	for (size_t i = 0; i < str.size(); i++)
+	{
+		if (str[i] == '%')
+		{
+			std::string tmp = str.substr(i + 1, 2);
+			str.erase(i, 3);
+			str.insert(i, 1, (char)std::stoi(tmp, nullptr, 16));
+		}
+	}
 }

@@ -249,6 +249,7 @@ void ClientRequest::checkLineValidity(std::string line)
 		{
 			this->method = requestline[0];
 		}
+		hexaToAscii(requestline[1]);
 		if (requestline[1].length() > 2048)
 		{
 			/* ERROR 414 */

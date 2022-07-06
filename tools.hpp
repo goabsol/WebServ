@@ -42,6 +42,8 @@ void trimwspace(std::string &str);
 
 bool validURI(std::string &uri);
 
+void hexaToAscii(std::string &str);
+
 class http_error_exception : public std::exception
 {
 public:
