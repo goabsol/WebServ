@@ -7,4 +7,5 @@ nginx.conf
 tofix
 webserv
 *.o
+*.mp4
 main.cpp

@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include "mimetypes.hpp"
 #define FILE true
 #define DIRECTORY false
 #define ON true

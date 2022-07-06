@@ -17,6 +17,7 @@ Location_T::Location_T(const Location_T& location)
 	root = location.root;
 	cgi = location.cgi;
 	allowed_methods = location.allowed_methods;
+	error_pages = location.error_pages;
 	autoindex = location.autoindex;
 	upload_store = location.upload_store;
 	locations = location.locations;
@@ -42,6 +43,7 @@ Location_T& Location_T::operator=(const Location_T& location)
 	upload_store = location.upload_store;
 	locations = location.locations;
 	redirection = location.redirection;
+	error_pages = location.error_pages;
 	index = location.index;
 
 	autoindex_set = location.autoindex_set;
@@ -59,6 +61,7 @@ Location_T::Location_T(std::vector<token_T> &tokens, size_t &i, Server_T *server
 	this->allowed_methods = server->allowed_methods;
 	this->autoindex = server->autoindex;
 	this->index = server->index;
+	this->error_pages = server->error_pages;
 	this->root = server->root;
 	this->redirection = std::make_pair(0, "");
 
@@ -148,6 +151,12 @@ Location_T::Location_T(std::vector<token_T> &tokens, size_t &i, Server_T *server
 				}
 				this->redirection = parse_error_page(tokens, i, "redirection");
 				this->redirection_set = true;
+			}
+			else if (tokens[i].value == "error_page")
+			{
+				std::pair<int, std::string> tmp_error = parse_error_page(tokens,i, "error page ");
+				this->error_pages[tmp_error.first] = tmp_error.second;
+
 			}
 			else
 			{
