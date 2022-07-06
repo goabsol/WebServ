@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/06 18:39:00 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/06 18:59:34 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,6 +131,7 @@ void ClientRequest::setIsDone(bool isDone)
 	this->isDone = isDone;
 	this->requestPosition = 0;
 	this->hasError = false;
+	this->body = "";
 	this->size = 0;
 	this->size_set = false;
 }
