@@ -194,6 +194,7 @@ void ClientRequest::parseRequest(std::string &line)
 		std::cout << "Request is done " << this->data << std::endl;
 		
 		line = this->data.substr(this->data.find("\r\n") + 2);
+		this->data = this->data.substr(this->data.find("\r\n") + 2);
 	}
 	if (this->requestPosition == 2)
 	{
@@ -351,7 +352,6 @@ void ClientRequest::checkLineValidity(std::string line)
 		else if (requestFields.find("Content-Length") != requestFields.end())
 		{
 			long length = std::stoi(requestFields["Content-Length"]) - this->body.length();
-			std::cout << "content-length: " << requestFields["Content-Length"] << " line " << line << std::endl;
 			if (length > this->server.body_size_limit)
 			{
 				this->hasError = true;
@@ -365,11 +365,10 @@ void ClientRequest::checkLineValidity(std::string line)
 			length -= line.length();
 			if (length <= 0 || std::stoi(requestFields["Content-Length"]) == 0)
 			{
-				std::cout << "body : " << this->body << std::endl;
 				this->setIsDone(true);
 				return ;
 			}
-			std::cout << "body : " << this->body << std::endl;
+			// std::cout << "body : " << this->body << std::endl;
 		}
 		else
 		{
@@ -427,13 +426,12 @@ void ClientRequest::storeRequest()
 		}
 		catch(std::exception e)
 		{
-			std::cerr << "Error: " << this->data << std::endl;
+			std::cerr << "Error: " << e.what() << std::endl;
 		}
 		if (this->hasError == true)
 		{
 			return ;
 		}
-		std::cout << "line: |" << line << "|"<< std::endl;
 		if (this->isDone)
 		{
 			
