@@ -35,8 +35,10 @@ ClientRequest::ClientRequest( const ClientRequest & src )
 	*this = src;
 }
 
-ClientRequest::ClientRequest(int socket, Server_T &server) : Socket(socket), data(""), requestPosition(0), hasError(false), isDone(false), closeConnection(false), server(server), current_location(Location_T()), body(""), size(0), size_set(false)
+ClientRequest::ClientRequest(int socket, Server_T &server) : Socket(socket), data(""), requestPosition(0), hasError(false), isDone(false), closeConnection(false), server(server), current_location(Location_T()), size(0), size_set(false), expect_newline(false), rq_size(0), rp_size(0)
 {
+	this->rq_name =std::string("tmp_files/")+  "rq_tmp_"+ std::to_string(socket) + ".txt";
+	this->rp_name = std::string("tmp_files/")+ "rp_tmp_"+ std::to_string(socket) + ".txt";
 }
 
 /*
@@ -61,7 +63,6 @@ ClientRequest &				ClientRequest::operator=( ClientRequest const & rhs )
 		this->requestURI = rhs.requestURI;
 		this->httpVersion = rhs.httpVersion;
 		this->requestFields = rhs.requestFields;
-		this->body = rhs.body;
 		this->data = rhs.data;
 		this->hasError = rhs.hasError;
 		this->needHost = rhs.needHost;
@@ -70,6 +71,10 @@ ClientRequest &				ClientRequest::operator=( ClientRequest const & rhs )
 		this->isDone = rhs.isDone;
 		this->closeConnection = rhs.closeConnection;
 		this->server = rhs.server;
+		this->rq_name = rhs.rq_name;
+		this->rp_name = rhs.rp_name;
+		this->rq_size = rhs.rq_size;
+		this->rp_size = rhs.rp_size;
 	}
 	return *this;
 }
@@ -131,7 +136,6 @@ void ClientRequest::setIsDone(bool isDone)
 	this->isDone = isDone;
 	this->requestPosition = 0;
 	this->hasError = false;
-	this->body = "";
 	this->size = 0;
 	this->size_set = false;
 }
@@ -186,32 +190,17 @@ bool ClientRequest::autorised_method(std::string &method)
 	return false;
 }
 
-void ClientRequest::parseRequest(std::string &line)
-{
-	if (line == "")
-	{
-		this->requestPosition = 2;
-		std::cout << "Request is done " << this->data << std::endl;
-		
-		line = this->data.substr(this->data.find("\r\n") + 2);
-		this->data = this->data.substr(this->data.find("\r\n") + 2);
-	}
-	if (this->requestPosition == 2)
-	{
-		std::cout << "DATA " << this->data << std::endl;
 
-	}
-	this->checkLineValidity(line);
-}
-
-void ClientRequest::checkLineValidity(std::string line)
+void ClientRequest::parseRequest()
 {
 	if (this->requestPosition == 0)
 	{
+		std::string line = this->data.substr(0, this->data.find("\r\n"));
+		this->data = this->data.substr(this->data.find("\r\n") + 2);
 		std::vector<std::string> requestline = split(line, ' ');
 		if (requestline.size() != 3 || countChr(line, ' ') != 2 || !validMethod(requestline[0]) || !validURI(requestline[1]))
 		{
-			throw http_error_exception(400, "Bad Request");
+			throw http_error_exception(400, "Bad Request1");
 			return ;
 		}
 		else
@@ -275,6 +264,13 @@ void ClientRequest::checkLineValidity(std::string line)
 	}
 	else if (requestPosition == 1)
 	{
+		std::string line = this->data.substr(0, this->data.find("\r\n"));
+		this->data = this->data.substr(this->data.find("\r\n") + 2);
+		if (line.length() == 0)
+		{
+			requestPosition = 2;
+			return ;
+		}
 		if (line.find(": ") != std::string::npos)
 		{
 			char *l = strdup(line.c_str());
@@ -288,93 +284,25 @@ void ClientRequest::checkLineValidity(std::string line)
 			this->hasError = true;
 			this->errorMessage = "Error: Request line field not valid";
 			/* ERROR 400 */
-			throw http_error_exception(400, "Bad Request");
+			throw http_error_exception(400, "Bad Request2");
 			return ;
 		}
 		// std::cout << p << " : " << v << std::endl;
 	}
 	else
 	{
-		// if (this->data.find("\r\n") != std::string::npos)
-		// {
-		// 	this->data = this->data.substr(this->data.find("\r\n") + 2);
-		// }
-		if (requestFields.find("Transfer-Encoding") != requestFields.end())
+		if (this->requestFields.find("Transfer-Encoding") != this->requestFields.end())
 		{
-			if (requestFields["Transfer-Encoding"] != "chunked")
-			{
-				throw http_error_exception(501, "Not Implemented");
-			}
-			if (this->size_set && line.length() > this->size)
-			{
-				this->size = 0;
-				this->size_set = false;
-				throw http_error_exception(400, "Bad Request");
-			}
-			std::cout << "hihi1 |" << line << "|" <<  std::endl;
-			while (line != "0" && line != "")
-			{
-				std::cout << "hihi2 " << line << " hihi " << this->data << std::endl;
-				if (this->data.find("\r\n") != std::string::npos)
-				{
-					std::cout << "hihi3 " << line << std::endl;
-					line = this->data.substr(0, this->data.find("\r\n"));
-					this->data = this->data.substr(this->data.find("\r\n") + 2);
-					if (!this->size_set)
-					{
-						this->size_set = true;
-						this->size = std::stoi(line, nullptr, 16);
-						std::cout << "size " << size << std::endl;
-					}
-					else
-					{
-						this->size -= line.length();
-						if (this->size <= 0)
-							this->size_set = false;
-						this->body += line;
-					}
-				}
-				else if (this->size > 0 || !this->size_set)
-				{
-					break;
-				}
-				else
-				{
-					this->setIsDone(true);
-				}
-			}
-			if (line == "0")
-			{
-				this->setIsDone(true);
-			}
-			std::cout << "body: " << this->body << std::endl;
-		}
-		else if (requestFields.find("Content-Length") != requestFields.end())
-		{
-			long length = std::stoi(requestFields["Content-Length"]) - this->body.length();
-			if (length > this->server.body_size_limit)
+			if (this->requestFields["Transfer-Encoding"] != "chunked")
 			{
 				this->hasError = true;
-				this->errorMessage = "Error: Content-Length too long";
-				/* 413 ERROR */
-				throw http_error_exception(413, "Request Entity Too Large");
-				return ;
+				this->errorMessage = "Error: Request line field not valid";
+				/* ERROR 501 */
+				throw http_error_exception(501, "Not Implemented");
 			}
-			this->body += this->data.substr(0, std::min(length, (long)this->data.length()));
-			this->data = this->data.substr(std::min(length, (long)this->data.length()));
-			length -= line.length();
-			if (length <= 0 || std::stoi(requestFields["Content-Length"]) == 0)
-			{
-				this->setIsDone(true);
-				return ;
-			}
-			// std::cout << "body : " << this->body << std::endl;
-		}
-		else
-		{
-			this->setIsDone(true);
 		}
 	}
+	
 }
 
 
@@ -411,23 +339,7 @@ void ClientRequest::storeRequest()
 	}
     while (this->data.find("\r\n") != std::string::npos)
     {
-		std::string line;
-		if (this->data.find("\r\n") != std::string::npos)
-			line = this->data.substr(0, this->data.find("\r\n"));
-		else
-			line = this->data;
-		parseRequest(line);
-		try
-		{
-			if (this->data.find("\r\n") != std::string::npos)
-			{
-				this->data = this->data.substr(this->data.find("\r\n") + 2);
-			}
-		}
-		catch(std::exception e)
-		{
-			std::cerr << "Error: " << e.what() << std::endl;
-		}
+		parseRequest();
 		if (this->hasError == true)
 		{
 			return ;
