@@ -58,6 +58,8 @@ class ClientRequest
 		size_t size;
 		bool size_set;
 		bool expect_newline;
+		bool new_data;
+		size_t content_len;
 
 };
 
