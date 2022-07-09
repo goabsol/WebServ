@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/06 18:59:34 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/09 18:22:33 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,7 +86,6 @@ ClientRequest &ClientRequest::operator=(ClientRequest const &rhs)
 
 std::ostream &operator<<(std::ostream &o, ClientRequest const &i)
 {
-	// o << "Value = " << i.getValue();
 	return o;
 }
 
@@ -158,7 +157,7 @@ bool ClientRequest::locationExists(std::string &request)
 {
 	// if (this->server.locations.find(request) != this->server.locations.end())
 	// 	return true;
-	std::vector<std::pair<std::string, Location_T>> valid_locations;
+	std::vector<std::pair<std::string, Location_T> > valid_locations;
 
 	for (std::map<std::string, Location_T>::iterator it = this->server.locations.begin(); it != this->server.locations.end(); it++)
 	{
@@ -219,7 +218,6 @@ void ClientRequest::parseRequest()
 			throw http_error_exception(404, "Not Found");
 			return;
 		}
-
 		// this->current_location = this->server.locations[requestline[1]];
 		// this->current_location_path = requestline[1];
 		if (this->server.locations[this->current_location_path].redirection_set)
@@ -230,7 +228,6 @@ void ClientRequest::parseRequest()
 			// throw http_redirect_exception((this->server.locations[requestline[1]].redirection).first, this->server.locations[requestline[1]].redirection.second, line + "\r\n" + this->data);
 			return;
 		}
-
 		else if (!autorised_method(this->method))
 		{
 			this->hasError = true;
@@ -314,7 +311,7 @@ void ClientRequest::parseRequest()
 						this->hasError = true;
 						this->errorMessage = "Error: Request line field not valid";
 						/* ERROR 400 */
-						throw http_error_exception(400, "Bad Request");
+						throw http_error_exception(400, "Bad Request?");
 					}
 					if (this->size == 0)
 					{
@@ -428,7 +425,7 @@ void ClientRequest::storeRequest()
 
 		//
 	}
-	while ((this->data != "" && (this->size == 0 || this->new_data)))
+	while (this->data.find("\r\n") != std::string::npos && (this->data != "" && (this->size == 0 || this->new_data)))
 	{
 		parseRequest();
 		if (this->requestPosition == 2)
