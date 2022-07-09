@@ -272,6 +272,7 @@ void ClientRequest::parseRequest()
 			std::string p(strtok(l, ": "));
 			std::string v(strtok(NULL, ": "));
 			// CHECK V WITH P
+
 			requestFields[p] = v;
 		}
 		else
@@ -374,7 +375,16 @@ void ClientRequest::parseRequest()
 		else if (this->requestFields.find("Content-Length") != this->requestFields.end())
 		{
 			if (content_len == 0)
+			try{
 				content_len = std::stoi(this->requestFields["Content-Length"]);
+			}
+			catch (std::invalid_argument)
+			{
+				this->hasError = true;
+				this->errorMessage = "Error: Request line field not valid";
+				/* ERROR 400 */
+				throw http_error_exception(400, "Bad Request3");
+			}
 			size_t mini = this->data.length() < content_len ? this->data.length() : content_len;
 			this->req_file.open(this->rq_name, std::ios::out | std::ios::app);
 			this->req_file << this->data.substr(0, mini);
@@ -425,7 +435,7 @@ void ClientRequest::storeRequest()
 
 		//
 	}
-	while (this->data.find("\r\n") != std::string::npos && (this->data != "" && (this->size == 0 || this->new_data)))
+	while (((this->data.find("\r\n") != std::string::npos) || this->requestPosition == 2) && (this->data != "" && (this->size == 0 || this->new_data)))
 	{
 		parseRequest();
 		if (this->requestPosition == 2)
