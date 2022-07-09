@@ -130,7 +130,6 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 		}
 		else
 		{
-			std::cout << "hi " << file_name << std::endl;
 			return (craftResponse(request, 404, "Not Found"));
 		}
 	}
