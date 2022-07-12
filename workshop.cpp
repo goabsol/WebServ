@@ -6,12 +6,11 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/04 01:31:07 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/04 06:00:24 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/06 17:30:27 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "workshop.hpp"
-#include <dirent.h>
 
 std::string makeautoindex(std::string &root, std::string &dir)
 {
@@ -62,7 +61,7 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 	message = "";
 	if (status_code > 399)
 	{
-
+		RF["Connection"] = "close";
 		if (request.current_location.error_pages.find(status_code) != request.current_location.error_pages.end())
 		{
 			std::cout << "Error page found" << std::endl;
@@ -131,7 +130,6 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 		}
 		else
 		{
-			std::cout << "hi " << file_name << std::endl;
 			return (craftResponse(request, 404, "Not Found"));
 		}
 	}
@@ -204,6 +202,7 @@ end:
 	file.open(file_name, std::fstream::in);
 	if (file && message == "")
 	{
+	std::cout<<"end"<<std::endl;
 		std::string line;
 		message = "";
 		while (1)
@@ -227,9 +226,9 @@ send:
 	response += "Content-Length: " + std::to_string(message.length()) + "\r\n"; // for body
 	response += "Connection: " + (RF.find("Connection") == RF.end() ? RF["Connection"] : "Keep-Alive") + "\r\n";
 	response += "\r\n";
-	std::cout << "Response: " << response << std::endl;
 	// body
 	response += message;
+	std::cout << "Response: "<< std::endl << response << std::endl;
 	
 	return response;
 }

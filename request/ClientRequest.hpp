@@ -24,7 +24,7 @@ class ClientRequest
 		void setData(std::string line);
 		ClientRequest &	operator=( ClientRequest const & rhs );
 		void checkLineValidity(std::string line);
-		void parseRequest(std::string &line);
+		void parseRequest();
 		void storeRequest();
 		bool isValidURI(std::string &);
 		void setIsDone(bool);
@@ -39,7 +39,12 @@ class ClientRequest
 		std::string requestURI;
 		std::string httpVersion;
 		std::map<std::string, std::string> requestFields;
-		std::string body;
+		std::fstream req_file;
+		std::fstream resp_file;
+		std::string rq_name;
+		std::string rp_name;
+		size_t rq_size;
+		size_t rp_size;
 		std::string data;
 		bool hasError;
 		bool needHost;
@@ -50,6 +55,12 @@ class ClientRequest
 		Server_T server;
 		Location_T current_location;
 		std::string current_location_path;
+		size_t size;
+		bool size_set;
+		bool expect_newline;
+		bool new_data;
+		size_t content_len;
+
 };
 
 std::ostream &			operator<<( std::ostream & o, ClientRequest const & i );
