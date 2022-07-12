@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/09 07:34:47 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/05 03:43:29 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/10 01:14:06 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 int    sockinit(parser_T parser)
 {
     std::map<SOCKET,ClientRequest>clients;
+    std::map<SOCKET,ClientRequest>clts_ongoing_requests;
     struct sockaddr_in johnny; 
     SOCKET server_fd;
 	SOCKET max_fd = 0;
@@ -72,11 +73,27 @@ int    sockinit(parser_T parser)
 		//making copies of read_fd and write_fd to avoid modifying the original with select
 		fd_set rcopy = read_fd;
 		fd_set wcopy = write_fd;
+		struct timeval timeout;
+		SOCKET socket_to_close;
+		
+		get_nearest_timeout(timeout, socket_to_close, clts_ongoing_requests);
+		std::cout << "TO test " << clts_ongoing_requests.empty() << " if not empty the closest to be closed: " << socket_to_close;
+		std::cout << " in " << timeout.tv_sec << "," << timeout.tv_usec << std::endl;
 		//selecting sockets to read/write (multiplexing)
-		if (select(max_fd + 1, &rcopy, &wcopy, NULL, NULL) < 0)
+		int select_return = select(max_fd + 1, &rcopy, &wcopy, NULL, (clts_ongoing_requests.empty() ? NULL : &timeout));
+		if (select_return < 0)
 		{
 			std::cerr << "Error in select" << std::endl;
 			return 1;
+		}
+		else if(select_return == 0)
+		{
+			std::cout << "Connection closedddd"  << std::endl;
+			FD_CLR(socket_to_close, &read_fd);
+			FD_CLR(socket_to_close, &write_fd);
+			close(socket_to_close);
+			clients.erase(socket_to_close);
+			clts_ongoing_requests.erase(socket_to_close);
 		}
 		for (int i = 1; i <= max_fd; i++)
 		{
@@ -118,6 +135,13 @@ int    sockinit(parser_T parser)
 					{
 						try
 						{
+							if (clts_ongoing_requests.find(i) == clts_ongoing_requests.end())
+							{
+								gettimeofday(&(clients[i].start_time), NULL);
+								clts_ongoing_requests[i] = clients[i];
+								std::cout << "Reading from socket " << i << std::endl;
+								std::cout << "Start time: " << clients[i].start_time.tv_sec << "," << clients[i].start_time.tv_usec << std::endl;
+							}
 							clients[i].storeRequest();
 							if (clients[i].getIsDone())
 							{
@@ -143,10 +167,12 @@ int    sockinit(parser_T parser)
 						FD_CLR(i, &write_fd);
 						close(i);
 						clients.erase(i);
+						clts_ongoing_requests.erase(i);
 					}
 					else if (clients[i].getIsDone())
 					{
 						std::cout << "Data: " << i << " " << clients[i].getData() << std::endl;
+						clts_ongoing_requests.erase(i);
 						FD_CLR(i, &read_fd);
 						FD_SET(i, &write_fd);
 					}

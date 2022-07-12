@@ -55,6 +55,7 @@ class ClientRequest
 		Server_T server;
 		Location_T current_location;
 		std::string current_location_path;
+		timeval start_time
 		size_t size;
 		bool size_set;
 		bool expect_newline;
@@ -64,3 +65,5 @@ class ClientRequest
 };
 
 std::ostream &			operator<<( std::ostream & o, ClientRequest const & i );
+
+void	get_nearest_timeout(struct timeval &, SOCKET &, std::map<SOCKET,ClientRequest> &);

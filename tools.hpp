@@ -1,6 +1,6 @@
 #pragma once
 
-#include <time.h>
+#include <sys/time.h>
 #include <ctime>
 #include <iostream>
 #include <string>
@@ -16,6 +16,8 @@
 #include <fstream>
 #include <fcntl.h>
 #include <exception>
+
+#define SOCKET int
 
 
 std::vector<std::string> split_white_space(std::string &line);

@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/09 18:22:33 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/10 01:23:02 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,10 @@ ClientRequest::ClientRequest(const ClientRequest &src)
 	*this = src;
 }
 
-ClientRequest::ClientRequest(int socket, Server_T &server) : Socket(socket), data(""), requestPosition(0), hasError(false), isDone(false), closeConnection(false), server(server), current_location(Location_T()), size(0), size_set(false), expect_newline(false), rq_size(0), rp_size(0), content_len(0)
+ClientRequest::ClientRequest(int socket, Server_T &server) : Socket(socket), data(""),
+      requestPosition(0), hasError(false), isDone(false), closeConnection(false),
+      server(server), current_location(Location_T()), size(0), size_set(false), expect_newline(false), rq_size(0), rp_size(0), content_len(0)
+
 {
 	this->rq_name = std::string("tmp_files/") + "rq_tmp_" + std::to_string(socket) + ".txt";
 	this->rp_name = std::string("tmp_files/") + "rp_tmp_" + std::to_string(socket) + ".txt";
@@ -70,6 +73,9 @@ ClientRequest &ClientRequest::operator=(ClientRequest const &rhs)
 		this->isDone = rhs.isDone;
 		this->closeConnection = rhs.closeConnection;
 		this->server = rhs.server;
+
+		this->current_location_path = rhs.current_location_path;
+		this->start_time = rhs.start_time;
 		this->rq_name = rhs.rq_name;
 		this->rp_name = rhs.rp_name;
 		this->rq_size = rhs.rq_size;
@@ -459,4 +465,41 @@ void ClientRequest::storeRequest()
 			return;
 		}
 	}
+	// std::cout << this->data << std::endl
+}
+
+void	get_nearest_timeout(struct timeval &timeout, SOCKET &stc, std::map<SOCKET,ClientRequest> &clients)
+{
+	gettimeofday(&timeout, NULL);
+	struct timeval min_timeout;
+	
+	for (std::map<SOCKET,ClientRequest>::iterator it = clients.begin(); it != clients.end(); ++it)
+	{
+		if (it->second.isDone == false)
+		{
+			struct timeval diff;
+			diff.tv_sec = 15 - (timeout.tv_sec - it->second.start_time.tv_sec);
+			diff.tv_usec = it->second.start_time.tv_usec - timeout.tv_usec;
+			if (diff.tv_usec < 0)
+			{
+				diff.tv_sec--;
+				diff.tv_usec += 1000000;
+			}
+			if (diff.tv_sec < 0)
+			{
+				diff.tv_sec = 0;
+				diff.tv_usec = 0;
+			}
+			// std::cout << "diff: " << diff.tv_sec << " " << diff.tv_usec << std::endl;
+			// std::cout << "timeout: " << timeout.tv_sec << " " << timeout.tv_usec << std::endl;
+			// std::cout << "start_time: " << it->second.start_time.tv_sec << " " << it->second.start_time.tv_usec << std::endl;
+			
+			if (it == clients.begin() || diff.tv_sec < min_timeout.tv_sec || (diff.tv_sec == min_timeout.tv_sec && diff.tv_usec < min_timeout.tv_usec))
+			{
+				min_timeout = diff;
+				stc = it->first;
+			}
+		}
+	}
+	timeout = min_timeout;
 }
