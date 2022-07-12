@@ -88,7 +88,7 @@ bool string_is_digit(std::string str)
 
 bool validMethod(std::string &method)
 {
-	if (method != "POST" && method != "GET" && method != "HEAD" && method != "PUT" && method != "DELETE")
+	if (method != "POST" && method != "GET" && method != "DELETE")
 	{
 		return false;
 	}
