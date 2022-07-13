@@ -55,7 +55,7 @@ class ClientRequest
 		Server_T server;
 		Location_T current_location;
 		std::string current_location_path;
-		timeval start_time
+		timeval start_time;
 		size_t size;
 		bool size_set;
 		bool expect_newline;
