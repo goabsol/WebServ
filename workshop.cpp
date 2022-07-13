@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/04 01:31:07 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/13 19:29:35 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/13 21:36:09 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -200,8 +200,8 @@ send:
 	if (request.body_present)
 	{
 		long long size_f = file.tellg();
-		if (size_f < 64000)
-		{
+		// if (size_f < 64000)
+		// {
 			char *buffer;
 			buffer = new char[size_f + 1];
 			buffer[size_f] = '\0';
@@ -214,12 +214,12 @@ send:
 			response += std::string(buffer);
 			std::cout << buffer << std::endl;
 			request.body_present = false;
-		}
-		else
-		{
-			response += "Transfer-Encoding: chunked\r\n\r\n";
-			request.bytes_read = 0;
-		}
+		// }
+		// else
+		// {
+		// 	response += "Transfer-Encoding: chunked\r\n\r\n";
+		// 	request.bytes_read = 0;
+		// }
 		file.close();
 	}
 	else
