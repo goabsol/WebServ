@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ClientRequest.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/10 01:23:02 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/13 16:54:55 by ael-bagh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -217,7 +217,21 @@ void ClientRequest::parseRequest()
 			throw http_error_exception(414, "Request-URI Too Long");
 			return;
 		}
-		else if (!locationExists(requestline[1]))
+		if (countChr(requestline[1], '?') > 1)
+		{
+			throw http_error_exception(400, "Bad Request?");
+			return;
+		}
+		else
+		{
+			std::vector<std::string> queryQuestionMark = split(requestline[1], '?');
+			if (queryQuestionMark.size() == 2)
+			{
+				requestline[1] = queryQuestionMark[0];
+				queryString = queryQuestionMark[1];
+			}
+		}
+		if (!locationExists(requestline[1]))
 		{
 			/* ERROR 404 */
 

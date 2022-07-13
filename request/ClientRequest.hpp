@@ -61,7 +61,7 @@ class ClientRequest
 		bool expect_newline;
 		bool new_data;
 		size_t content_len;
-
+		std::string queryString;
 };
 
 std::ostream &			operator<<( std::ostream & o, ClientRequest const & i );
