@@ -6,11 +6,18 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/09 07:34:47 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/13 14:47:50 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/13 20:15:43 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "socket.hpp"
+
+std::string decToHexa(int n) 
+{ 
+	std::stringstream ss;
+	ss << std::hex << n;
+	return (ss.str());
+}
 
 int    sockinit(parser_T parser)
 {
@@ -176,13 +183,61 @@ int    sockinit(parser_T parser)
 			}
 			else if (FD_ISSET(i, &wcopy)) //if socket is ready to write, send response
 			{
-				std::string hello = m_socket_to_response[i];
-				int sent_bytes = send(i,hello.c_str(),hello.size(),0);
+				std::string hello = "";
+				int sent_bytes = 0;
+				if (clients[i].body_present == false)
+				{
+					hello = m_socket_to_response[i];
+					sent_bytes = send(i,hello.c_str(),hello.size(),0);
+					if (sent_bytes < hello.size())
+					{
+						m_socket_to_response[i] = hello.substr(sent_bytes);
+					}
+					else
+					{
+						FD_CLR(i, &write_fd);
+						FD_SET(i, &read_fd);
+					}
+					clients[i].setIsDone(false);
+				}
+				else
+				{
+					
+					if (clients[i].next_is_zero)
+					{
+						hello = "0\r\n\r\n";
+						clients[i].body_present = false;
+						FD_CLR(i, &write_fd);
+						FD_SET(i, &read_fd);
+						clients[i].setIsDone(false);
+					}
+					else
+					{
+						std::fstream file(clients[i].file_name,  std::ios::in| std::ios::ate);
+						long long size_f = file.tellg();
+						if (size_f > 64000)
+						{
+							size_f = 64000;
+						}
+						char *buffer;
+						buffer = new char[size_f + 1];
+						buffer[size_f] = '\0';
+					 	file.seekg(clients[i].bytes_read, std::ios::beg);
+						file.read(buffer, size_f);
+						long size = file.gcount();
+						clients[i].bytes_read += size;
+						std::string hexa_length = decToHexa(std::string(buffer).size()) + "\r\n";
+						std::cout << size_f << " " << size << std::endl;
+						hello = hexa_length + std::string(buffer) + "\r\n";
+						sent_bytes = send(i,hello.c_str(),hello.size(),0);
+						if (size < 64000)
+							clients[i].next_is_zero = true;
+						file.close();
+					}
+					// std::cout << clients[i].getData() << std::endl;
+				}
+				std::cout << "Size of file: " << hello.size() << std::endl << "buffer: " << std::endl << hello << std::endl;
 				std::cout << "Data sent ---> sent: " << sent_bytes << " ----- total: " << hello.size() << std::endl;
-				std::cout << clients[i].getData() << std::endl;
-				FD_CLR(i, &write_fd);
-				FD_SET(i, &read_fd);
-				clients[i].setIsDone(false);
 			}
 		}
 	}

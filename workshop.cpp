@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/04 01:31:07 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/13 15:11:48 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/13 19:29:35 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,43 +50,42 @@ std::string getFileType(std::string const &file_name)
 
 std::string craftResponse(ClientRequest &request, int status_code, std::string message)
 {
-
 	std::string response = "";
 	std::map<std::string, std::string> RF = request.getRequestFields();
 	response += "HTTP/1.1 " + std::to_string(status_code) + " " + message + "\r\n";
 	response += "Server: " + request.getServer().server_name + "\r\n";
 
+	request.file_name = "";
 	std::fstream file;
-	std::string file_name;
 	message = "";
 	if (status_code > 399)
 	{
 		if (request.current_location.error_pages.find(status_code) != request.current_location.error_pages.end())
-			file_name = request.current_location.root + request.current_location.error_pages[status_code];
+			request.file_name = request.current_location.root + request.current_location.error_pages[status_code];
 		else
-			file_name = "./pages/" + std::to_string(status_code) + ".html";
+			request.file_name = "./pages/" + std::to_string(status_code) + ".html";
 		goto end;
 	}
 	else if (request.current_location.redirection.first != 0)
 	{
-		file_name = request.current_location.redirection.second;
-		request.requestURI = file_name;
+		request.file_name = request.current_location.redirection.second;
+		request.requestURI = request.file_name;
 		response = "HTTP/1.1 301 Moved Permanently\r\n";
-		response += "Location: " + file_name + "\r\n";
+		response += "Location: " + request.file_name + "\r\n";
 		goto send;
 	}
 	else
-		file_name = request.current_location.root + request.requestURI;
+		request.file_name = request.current_location.root + request.requestURI;
 
 	if (request.method == "GET")
 	{
 		get:
-		if (getRequestedResource(file_name, file))
+		if (getRequestedResource(request.file_name, file))
 		{
-			if (getResourceType(file_name) == FILE)
+			if (getResourceType(request.file_name) == FILE)
 			{
 				std::string content_type = "text/html";
-				RF["Content-Type"] = getFileType(file_name);
+				RF["Content-Type"] = getFileType(request.file_name);
 				gotCGI(request.current_location, content_type, request.method);
 			}
 			else
@@ -100,15 +99,18 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 					goto send;
 				}
 				std::string index;
-				if (indexInDir(request.current_location.index, file_name, index))
+				if (indexInDir(request.current_location.index, request.file_name, index))
 				{
-					file_name += index;
+					request.file_name += index;
 					request.requestURI += index;
-					std::cout << "folder : " << file_name << std::endl;
+					std::cout << "folder : " << request.file_name << std::endl;
 					goto get;
 				}
 				else if (request.method == "GET" && request.current_location.autoindex)
-					message = makeautoindex(request.current_location.root, file_name);
+				{
+					message = makeautoindex(request.current_location.root, request.file_name);
+					goto send;
+				}
 				else
 					return (craftResponse(request, 403, "Forbidden"));
 			}
@@ -127,12 +129,12 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 	}
 	else if (request.method == "DELETE")
 	{
-		if (getRequestedResource(file_name, file))
+		if (getRequestedResource(request.file_name, file))
 		{
-			if (getResourceType(file_name) == FILE)
+			if (getResourceType(request.file_name) == FILE)
 			{
 				std::string content_type = "text/html";
-				RF["Content-Type"] = getFileType(file_name);
+				RF["Content-Type"] = getFileType(request.file_name);
 				if (!gotCGI(request.current_location, content_type, request.method))
 					return (craftResponse(request, 204, "No Content"));
 			}
@@ -145,17 +147,17 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 				{
 					std::string index;
 					if (indexInDir(request.current_location.index, request.requestURI, index))
-						file_name += index;
+						request.file_name += index;
 					else
 						return (craftResponse(request, 403, "Forbidden"));
 				}
 				else
 				{
-					if (emptyDir(file_name))
+					if (emptyDir(request.file_name))
 						return (craftResponse(request, 204, "No Content"));
 					else
 					{
-						if (access(file_name.c_str(), W_OK))
+						if (access(request.file_name.c_str(), W_OK))
 							return (craftResponse(request, 500, "Internal Server Error"));
 						else
 							return (craftResponse(request, 403, "Forbidden"));
@@ -176,21 +178,12 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 	}
 
 end:
-	file.open(file_name, std::fstream::in);
-	if (file && message == "")
+	file.open(request.file_name,  std::ios::in| std::ios::binary| std::ios::ate);
+	if (file.is_open())
 	{
-	std::cout<<"end"<<std::endl;
-		std::string line;
-		message = "";
-		while (1)
-		{
-			getline(file, line);
-			message += line + "\r\n";
-			if (file.eof())
-				break;
-		}
-		file.close();
+		request.body_present = true;
 	}
+	
 send:
 	if (RF.find("Content-Type") == RF.end())
 	{
@@ -200,12 +193,41 @@ send:
 	{
 		response += "Content-Type: " + RF["Content-Type"] + "\r\n";
 	}
-	response += "Content-Length: " + std::to_string(message.length()) + "\r\n"; // for body
+	
 	response += "Connection: " + (RF.find("Connection") == RF.end() ? RF["Connection"] : "Keep-Alive") + "\r\n";
-	response += "\r\n";
+	
 	// body
-	response += message;
-	std::cout << "Response: "<< std::endl << response << std::endl;
+	if (request.body_present)
+	{
+		long long size_f = file.tellg();
+		if (size_f < 64000)
+		{
+			char *buffer;
+			buffer = new char[size_f + 1];
+			buffer[size_f] = '\0';
+			file.seekg (0, std::ios::beg);
+			file.read(buffer, size_f);
+			
+			std::cout << "size : " << size_f << std::endl;
+			std::cout << "hello" << std::endl;
+			response += "Content-Length: " + std::to_string(size_f) + "\r\n\r\n"; // for body
+			response += std::string(buffer);
+			std::cout << buffer << std::endl;
+			request.body_present = false;
+		}
+		else
+		{
+			response += "Transfer-Encoding: chunked\r\n\r\n";
+			request.bytes_read = 0;
+		}
+		file.close();
+	}
+	else
+	{
+		response += "Content-Length: " + std::to_string(message.length()) + "\r\n\r\n";
+		response += message;
+	}
+	// std::cout << "Response: "<< std::endl << response << std::endl;
 	
 	return response;
 }

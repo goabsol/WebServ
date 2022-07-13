@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/13 15:29:10 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/13 18:17:44 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ ClientRequest::ClientRequest(const ClientRequest &src)
 
 ClientRequest::ClientRequest(int socket, Server_T &server) : Socket(socket), data(""),
       requestPosition(0), hasError(false), isDone(false), closeConnection(false),
-      server(server), current_location(Location_T()), size(0), size_set(false), expect_newline(false), rq_size(0), rp_size(0), content_len(0)
+      server(server), current_location(Location_T()), size(0), size_set(false), expect_newline(false), rq_size(0), rp_size(0), content_len(0), body_present(false), bytes_read(0), file_name(""), next_is_zero(false)
 
 {
 	this->rq_name = std::string("tmp_files/") + "rq_tmp_" + std::to_string(socket) + ".txt";
@@ -73,6 +73,7 @@ ClientRequest &ClientRequest::operator=(ClientRequest const &rhs)
 		this->isDone = rhs.isDone;
 		this->closeConnection = rhs.closeConnection;
 		this->server = rhs.server;
+		this->body_present = rhs.body_present;
 
 		this->current_location_path = rhs.current_location_path;
 		this->start_time = rhs.start_time;

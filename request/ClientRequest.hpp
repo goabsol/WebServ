@@ -61,7 +61,10 @@ class ClientRequest
 		bool expect_newline;
 		bool new_data;
 		size_t content_len;
-
+		bool body_present;
+		std::string file_name;
+		long		bytes_read;
+		bool next_is_zero;
 };
 
 std::ostream &			operator<<( std::ostream & o, ClientRequest const & i );
