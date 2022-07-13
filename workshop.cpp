@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/04 01:31:07 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/06 17:30:27 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/13 15:11:48 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,18 +61,10 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 	message = "";
 	if (status_code > 399)
 	{
-		RF["Connection"] = "close";
 		if (request.current_location.error_pages.find(status_code) != request.current_location.error_pages.end())
-		{
-			std::cout << "Error page found" << std::endl;
 			file_name = request.current_location.root + request.current_location.error_pages[status_code];
-			std::cout << "Error page: " << file_name << std::endl;
-		}
 		else
-		{
-			std::cout << "yo" << std::endl;
 			file_name = "./pages/" + std::to_string(status_code) + ".html";
-		}
 		goto end;
 	}
 	else if (request.current_location.redirection.first != 0)
@@ -84,18 +76,15 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 		goto send;
 	}
 	else
-	{
 		file_name = request.current_location.root + request.requestURI;
-	}
 
 	if (request.method == "GET")
 	{
-	get:
+		get:
 		if (getRequestedResource(file_name, file))
 		{
 			if (getResourceType(file_name) == FILE)
 			{
-			hi:
 				std::string content_type = "text/html";
 				RF["Content-Type"] = getFileType(file_name);
 				gotCGI(request.current_location, content_type, request.method);
@@ -119,19 +108,13 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 					goto get;
 				}
 				else if (request.method == "GET" && request.current_location.autoindex)
-				{
 					message = makeautoindex(request.current_location.root, file_name);
-				}
 				else
-				{
 					return (craftResponse(request, 403, "Forbidden"));
-				}
 			}
 		}
 		else
-		{
 			return (craftResponse(request, 404, "Not Found"));
-		}
 	}
 	else if (request.method == "POST")
 	{
@@ -140,9 +123,7 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 			// upload
 		}
 		else
-		{
 			goto get;
-		}
 	}
 	else if (request.method == "DELETE")
 	{
@@ -164,13 +145,9 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 				{
 					std::string index;
 					if (indexInDir(request.current_location.index, request.requestURI, index))
-					{
 						file_name += index;
-					}
 					else
-					{
 						return (craftResponse(request, 403, "Forbidden"));
-					}
 				}
 				else
 				{
