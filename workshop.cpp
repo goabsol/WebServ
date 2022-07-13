@@ -200,8 +200,8 @@ send:
 	if (request.body_present)
 	{
 		long long size_f = file.tellg();
-		// if (size_f < 64000)
-		// {
+		if (size_f < 64000)
+		{
 			char *buffer;
 			buffer = new char[size_f + 1];
 			buffer[size_f] = '\0';
@@ -210,16 +210,15 @@ send:
 			
 			std::cout << "size : " << size_f << std::endl;
 			std::cout << "hello" << std::endl;
-			response += "Content-Length: " + std::to_string(size_f) + "\r\n\r\n"; // for body
-			response += std::string(buffer);
+			 // for body
+			response += std::string(buffer, size_f);
 			std::cout << buffer << std::endl;
 			request.body_present = false;
-		// }
-		// else
-		// {
-		// 	response += "Transfer-Encoding: chunked\r\n\r\n";
-		// 	request.bytes_read = 0;
-		// }
+		}
+		else
+		{
+			request.bytes_read = 0;
+		}
 		file.close();
 	}
 	else

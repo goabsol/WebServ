@@ -185,8 +185,8 @@ int    sockinit(parser_T parser)
 			{
 				std::string hello = "";
 				int sent_bytes = 0;
-				// if (clients[i].body_present == false)
-				// {
+				if (clients[i].body_present == false)
+				{
 					hello = m_socket_to_response[i];
 					std::cout << "response size " << hello.size() << std::endl;
 					sent_bytes = send(i,hello.c_str(),hello.size(),0);
@@ -200,44 +200,54 @@ int    sockinit(parser_T parser)
 						FD_SET(i, &read_fd);
 					}
 					clients[i].setIsDone(false);
-				// }
-				// else
-				// {
-					
-				// 	if (clients[i].next_is_zero)
-				// 	{
-				// 		hello = "0\r\n\r\n";
-				// 		clients[i].body_present = false;
-				// 		FD_CLR(i, &write_fd);
-				// 		FD_SET(i, &read_fd);
-				// 		clients[i].setIsDone(false);
-				// 	}
-				// 	else
-				// 	{
-				// 		std::fstream file(clients[i].file_name,  std::ios::in| std::ios::ate);
-				// 		long long size_f = file.tellg();
-				// 		if (size_f > 64000)
-				// 		{
-				// 			size_f = 64000;
-				// 		}
-				// 		char *buffer;
-				// 		buffer = new char[size_f + 1];
-				// 		buffer[size_f] = '\0';
-				// 	 	file.seekg(clients[i].bytes_read, std::ios::beg);
-				// 		file.read(buffer, size_f);
-				// 		long size = file.gcount();
-				// 		clients[i].bytes_read += size;
-				// 		std::string hexa_length = decToHexa(std::string(buffer).size()) + "\r\n";
-				// 		std::cout << size_f << " " << size << std::endl;
-				// 		hello = hexa_length + std::string(buffer) + "\r\n";
-				// 		sent_bytes = send(i,hello.c_str(),hello.size(),0);
-				// 		if (size < 64000)
-				// 			clients[i].next_is_zero = true;
-				// 		file.close();
-				// 	}
-				// 	// std::cout << clients[i].getData() << std::endl;
-				// }
-				std::cout << "Size of file: " << hello.size() << std::endl << "buffer: " << std::endl << hello << std::endl;
+				}
+				else
+				{
+					////////////////////////////////////////////////////////////////////////////////// MAY GOD HELP US ////////////////////////////////////////////////////////////////////////////////
+					////////////////////////////////////////////////////////////////////////////////// MAY GOD HELP US ////////////////////////////////////////////////////////////////////////////////
+					////////////////////////////////////////////////////////////////////////////////// MAY GOD HELP US ////////////////////////////////////////////////////////////////////////////////
+					////////////////////////////////////////////////////////////////////////////////// MAY GOD HELP US ////////////////////////////////////////////////////////////////////////////////
+					////////////////////////////////////////////////////////////////////////////////// MAY GOD HELP US ////////////////////////////////////////////////////////////////////////////////
+					////////////////////////////////////////////////////////////////////////////////// kill me with a brick ////////////////////////////////////////////////////////////////////////////////
+					////////////////////////////////////////////////////////////////////////////////// MAY GOD HELP US ////////////////////////////////////////////////////////////////////////////////
+					////////////////////////////////////////////////////////////////////////////////// MAY GOD HELP US ////////////////////////////////////////////////////////////////////////////////
+					// std::fstream file(clients[i].file_name,  std::ios::in| std::ios::ate| std::ifstream::binary);
+					// file.seekg(-clients[i].bytes_read, file.end);
+					// long long size_f = file.tellg();
+					// std::cout << "bytes to read " << size_f << std::endl;
+					// file.seekg(clients[i].bytes_read, file.beg);
+					// if (size_f > 64000)
+					// 	size_f = 64000;
+					// char *buffer;
+					// buffer = new char[size_f];
+					// file.read(buffer, size_f);
+					// clients[i].bytes_read += size_f;
+					// hello = std::string(buffer, size_f);
+					// std::vector<char> v(hello.begin(), hello.end());
+					// std::vector<char>::iterator it;
+					// std::cout << std::string(hello.c_str()).size() << std::endl;
+					// sent_bytes = send(i,&(*it),hello.size(),0);
+					// if (size_f < 64000)
+					// {
+					// 	std::cout << "goes here ewfew fewf ewf ewf ew" << std::endl;
+					// 	clients[i].body_present = false;
+					// 	int sent_bytes = 0;
+					// 	if (sent_bytes < hello.size())
+					// 	{
+					// 		m_socket_to_response[i] = hello.substr(sent_bytes);
+					// 	}
+					// 	else
+					// 	{
+					// 		FD_CLR(i, &write_fd);
+					// 		FD_SET(i, &read_fd);
+					// 	}
+					// 	clients[i].setIsDone(false);
+					// }
+					// file.close();
+					// // std::cout << clients[i].getData() << std::endl;
+					////////////////////////////////////////////////////////////////////////////////// MAY GOD HELP US ////////////////////////////////////////////////////////////////////////////////
+				}
+				// std::cout << "Size of file: " << hello.size() << std::endl << "buffer: " << std::endl << hello << std::endl;
 				std::cout << "Data sent ---> sent: " << sent_bytes << " ----- total: " << hello.size() << std::endl;
 			}
 		}

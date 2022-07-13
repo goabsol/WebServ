@@ -74,6 +74,7 @@ ClientRequest &ClientRequest::operator=(ClientRequest const &rhs)
 		this->closeConnection = rhs.closeConnection;
 		this->server = rhs.server;
 		this->body_present = rhs.body_present;
+		this->bytes_read = rhs.bytes_read;
 
 		this->current_location_path = rhs.current_location_path;
 		this->start_time = rhs.start_time;
