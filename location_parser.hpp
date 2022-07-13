@@ -14,7 +14,7 @@ class Location_T
 		Location_T(const Location_T& location);
 		Location_T& operator=(const Location_T& location);
 		std::string root;
-		std::vector<std::string> cgi;
+		std::map<std::string, std::string> cgi;
 		std::vector<std::string> allowed_methods;
 		std::vector<std::string> index;
 		bool autoindex;

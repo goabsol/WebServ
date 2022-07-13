@@ -6,7 +6,7 @@ Location_T::Location_T()
 	char tmp[256];
     getcwd(tmp, 256);
 	root = tmp;
-	cgi = std::vector<std::string>();
+	cgi = std::map<std::string, std::string>();
 	allowed_methods = std::vector<std::string>();
 	autoindex = false;
 	upload_store = "";
@@ -122,11 +122,17 @@ Location_T::Location_T(std::vector<token_T> &tokens, size_t &i, Server_T *server
 			else if (tokens[i].value == "cgi")
 			{
 				i++;
-				while(tokens[i].type != SEMICOLON)
+				if (this->cgi.find(tokens[i].value) != this->cgi.end())
 				{
-					this->cgi.push_back(tokens[i].value);
-					i++;
+					print_and_exit("Error: cgi already set", tokens[i].line);
 				}
+				std::string key = tokens[i].value;
+				i++;
+				if (tokens[i].type != VALUE)
+				{
+					print_and_exit("Error: cgi path expected", tokens[i].line);
+				}
+				this->cgi[key] = tokens[i].value;
 			}
 			else if (tokens[i].value == "autoindex")
 			{
