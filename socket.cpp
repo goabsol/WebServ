@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/09 07:34:47 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/10 01:14:06 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/13 14:47:50 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,18 +135,17 @@ int    sockinit(parser_T parser)
 					{
 						try
 						{
-							if (clts_ongoing_requests.find(i) == clts_ongoing_requests.end())
-							{
-								gettimeofday(&(clients[i].start_time), NULL);
-								clts_ongoing_requests[i] = clients[i];
-								std::cout << "Reading from socket " << i << std::endl;
-								std::cout << "Start time: " << clients[i].start_time.tv_sec << "," << clients[i].start_time.tv_usec << std::endl;
-							}
+							// if (clts_ongoing_requests.find(i) == clts_ongoing_requests.end())
+							// {
+							clts_ongoing_requests.erase(i); //not really conviced about the timeout reseting every time a request is appended instead of only when the request is done. -to discuss later
+							gettimeofday(&(clients[i].start_time), NULL);
+							clts_ongoing_requests[i] = clients[i];
+							std::cout << "Reading from socket " << i << std::endl;
+							std::cout << "Start time: " << clients[i].start_time.tv_sec << "," << clients[i].start_time.tv_usec << std::endl;
+							// }
 							clients[i].storeRequest();
 							if (clients[i].getIsDone())
-							{
-							m_socket_to_response[i] = craftResponse(clients[i]);
-							}
+								m_socket_to_response[i] = craftResponse(clients[i]);
 						}
 						catch(http_error_exception& e)
 						{
@@ -154,12 +153,9 @@ int    sockinit(parser_T parser)
 							clients[i].setIsDone(true);
 							clients[i].clearData();
 							m_socket_to_response[i] = craftResponse(clients[i], e.code, e.message);
-
 						}
 
 					}
-					////////////////////////////////////////////////////////////////////
-					// std::cout << client.getHasError() << " " << client.getIsDone() << std::endl;
 					if (clients[i].getHasError() || clients[i].getConnectionClosed())
 					{
 						std::cout << (clients[i].getHasError()?clients[i].getError() : "Connection closed")  << std::endl;
@@ -180,12 +176,10 @@ int    sockinit(parser_T parser)
 			}
 			else if (FD_ISSET(i, &wcopy)) //if socket is ready to write, send response
 			{
-				// std::cout << "Socket " << i << " of " << m_socket_to_server[i].name << " is ready for writing" << std::endl;
 				std::string hello = m_socket_to_response[i];
 				int sent_bytes = send(i,hello.c_str(),hello.size(),0);
 				std::cout << "Data sent ---> sent: " << sent_bytes << " ----- total: " << hello.size() << std::endl;
 				std::cout << clients[i].getData() << std::endl;
-				//remove socket from write_fd and add to read_fd
 				FD_CLR(i, &write_fd);
 				FD_SET(i, &read_fd);
 				clients[i].setIsDone(false);
