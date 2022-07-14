@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/04 01:31:07 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/13 21:36:09 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/14 18:38:24 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -194,7 +194,7 @@ send:
 		response += "Content-Type: " + RF["Content-Type"] + "\r\n";
 	}
 	
-	response += "Connection: " + (RF.find("Connection") == RF.end() ? RF["Connection"] : "Keep-Alive") + "\r\n";
+	// response += "Connection: " + (RF.find("Connection") == RF.end() ? RF["Connection"] : "Keep-Alive") + "\r\n";
 	
 	// body
 	if (request.body_present)
@@ -216,16 +216,20 @@ send:
 			response += std::string(buffer, size_f);
 			std::cout << buffer << std::endl;
 			request.body_present = false;
+			request.size_body = size_f;
 		}
 		else
 		{
+			response += "Content-Length: " + std::to_string(size_f) + "\r\n\r\n";
 			request.bytes_read = 0;
+			request.size_body = size_f;
 		}
 		file.close();
 	}
 	else
 	{
 		response += "Content-Length: " + std::to_string(message.length()) + "\r\n\r\n";
+		request.size_body = message.length();
 		response += message;
 	}
 	// std::cout << "Response: "<< std::endl << response << std::endl;

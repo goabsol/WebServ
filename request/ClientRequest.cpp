@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/13 18:17:44 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/14 20:57:02 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,9 @@ ClientRequest::ClientRequest(const ClientRequest &src)
 
 ClientRequest::ClientRequest(int socket, Server_T &server) : Socket(socket), data(""),
       requestPosition(0), hasError(false), isDone(false), closeConnection(false),
-      server(server), current_location(Location_T()), size(0), size_set(false), expect_newline(false), rq_size(0), rp_size(0), content_len(0), body_present(false), bytes_read(0), file_name(""), next_is_zero(false)
+      server(server), current_location(Location_T()), size(0), size_set(false),
+	  expect_newline(false), rq_size(0), rp_size(0), content_len(0), body_present(false),
+	  bytes_read(0), file_name(""), next_is_zero(false), cursor(0), size_body(0)
 
 {
 	this->rq_name = std::string("tmp_files/") + "rq_tmp_" + std::to_string(socket) + ".txt";
@@ -75,7 +77,6 @@ ClientRequest &ClientRequest::operator=(ClientRequest const &rhs)
 		this->server = rhs.server;
 		this->body_present = rhs.body_present;
 		this->bytes_read = rhs.bytes_read;
-
 		this->current_location_path = rhs.current_location_path;
 		this->start_time = rhs.start_time;
 		this->rq_name = rhs.rq_name;
@@ -88,6 +89,10 @@ ClientRequest &ClientRequest::operator=(ClientRequest const &rhs)
 		this->size = rhs.size;
 		this->size_set = rhs.size_set;
 		this->content_len = rhs.content_len;
+		this->cursor = rhs.cursor;
+		this->next_is_zero = rhs.next_is_zero;
+		this->file_name = rhs.file_name;
+		this->size_body = rhs.size_body;
 	}
 	return *this;
 }
@@ -148,6 +153,7 @@ void ClientRequest::setIsDone(bool isDone)
 	this->hasError = false;
 	this->size = 0;
 	this->size_set = false;
+	this->cursor = 0;
 }
 
 void ClientRequest::clearData()
@@ -443,6 +449,7 @@ void ClientRequest::storeRequest()
 
 		//
 	}
+	// std::cout << this->data << std::endl;
 	while (((this->data.find("\r\n") != std::string::npos) || this->requestPosition == 2) && (this->data != "" && (this->size == 0 || this->new_data)))
 	{
 		parseRequest();

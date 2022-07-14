@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/09 07:34:47 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/13 21:22:54 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/14 21:01:12 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,8 @@ int sockinit(parser_T parser)
 			// setting socket options to reuse address
 			if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
 				std::cout << "setsockopt(SO_REUSEADDR) failed" << std::endl;
+			// if (setsockopt(server_fd, SOL_SOCKET, SO_NOSIGPIPE, &enable, sizeof(int)) < 0)
+			// 	std::cout << "setsockopt(SO_NOSIGPIPE) failed" << std::endl;
 			memeset(&johnny, 0, sizeof(johnny));
 			johnny.sin_family = AF_INET;
 			// std::cout << parser.servers[i].ports[j].second << " " << parser.servers[i].ports[j].first << std::endl;
@@ -84,8 +86,8 @@ int sockinit(parser_T parser)
 		SOCKET socket_to_close;
 
 		get_nearest_timeout(timeout, socket_to_close, clts_ongoing_requests);
-		std::cout << "TO test " << clts_ongoing_requests.empty() << " if not empty the closest to be closed: " << socket_to_close;
-		std::cout << " in " << timeout.tv_sec << "," << timeout.tv_usec << std::endl;
+		// std::cout << "TO test " << clts_ongoing_requests.empty() << " if not empty the closest to be closed: " << socket_to_close;
+		// std::cout << " in " << timeout.tv_sec << "," << timeout.tv_usec << std::endl;
 		// selecting sockets to read/write (multiplexing)
 		int select_return = select(max_fd + 1, &rcopy, &wcopy, NULL, (clts_ongoing_requests.empty() ? NULL : &timeout));
 		if (select_return < 0)
@@ -120,20 +122,24 @@ int sockinit(parser_T parser)
 					}
 					if (setsockopt(client_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
 						std::cout << "setsockopt(SO_REUSEADDR) failed" << std::endl;
+					// if (setsockopt(client_fd, SOL_SOCKET, SO_NOSIGPIPE, &enable, sizeof(int)) < 0)
+					// 	std::cout << "setsockopt(SO_NOSIGPIPE) failed" << std::endl;
 					FD_SET(client_fd, &read_fd);
 					if (client_fd > max_fd)
 						max_fd = client_fd;
 					m_socket_to_server[client_fd] = m_socket_to_server[i];
 					// std::cout << i << " " << client_fd << std::endl;
 					clients[client_fd] = ClientRequest(client_fd, m_socket_to_server[i]);
+					std::cout << "accept socket " << client_fd << std::endl;
 					break;
 				}
 				else
 				{
+					
 					// if (clients.find(i) == clients.end())
 					// {
 					// 	clients[i] = ClientRequest(i);
-					// 	std::cout << i  << " fxfcv " << clients[i].getSocket() << std::endl;
+						std::cout << i  << " fxfcv " << clients[i].getSocket() << std::endl;
 					// }
 					// else
 					// {
@@ -149,7 +155,7 @@ int sockinit(parser_T parser)
 							gettimeofday(&(clients[i].start_time), NULL);
 							clts_ongoing_requests[i] = clients[i];
 							std::cout << "Reading from socket " << i << std::endl;
-							std::cout << "Start time: " << clients[i].start_time.tv_sec << "," << clients[i].start_time.tv_usec << std::endl;
+							// std::cout << "Start time: " << clients[i].start_time.tv_sec << "," << clients[i].start_time.tv_usec << std::endl;
 							// }
 							clients[i].storeRequest();
 							if (clients[i].getIsDone())
@@ -167,22 +173,23 @@ int sockinit(parser_T parser)
 					{
 						std::cout << (clients[i].getHasError() ? clients[i].getError() : "Connection closed") << std::endl;
 						FD_CLR(i, &read_fd);
-						FD_CLR(i, &write_fd);
 						close(i);
 						clients.erase(i);
 						clts_ongoing_requests.erase(i);
 					}
 					else if (clients[i].getIsDone())
 					{
-						std::cout << "Data: " << i << " " << clients[i].getData() << std::endl;
+						std::cout << "Data: " << i << " " << clients[i].getData() << " " << clients.size() << std::endl;
 						clts_ongoing_requests.erase(i);
 						FD_CLR(i, &read_fd);
 						FD_SET(i, &write_fd);
+						// std::cout << "Writing to socket " << i << std::endl;
 					}
 				}
 			}
 			else if (FD_ISSET(i, &wcopy)) // if socket is ready to write, send response
 			{
+				// std::cout << "Writing to socket " << i << std::endl;
 				std::string hello = "";
 				int sent_bytes = 0;
 				if (clients[i].body_present == false)
@@ -196,6 +203,7 @@ int sockinit(parser_T parser)
 					}
 					else
 					{
+						std::cout << "delete socket from write " << i << std::endl;
 						FD_CLR(i, &write_fd);
 						FD_SET(i, &read_fd);
 					}
@@ -203,22 +211,57 @@ int sockinit(parser_T parser)
 				}
 				else
 				{
-					std::stringstream oss;
+					char buffer[2048];
+					size_t bytes_read = 0;
 					std::fstream file(clients[i].file_name, std::ios::in | std::ios::binary);
-					oss << m_socket_to_response[i] << ("Content-Length: " + std::to_string(file.tellg()) + "\r\n\r\n") << file.rdbuf();
-
-					std::cout << "hi 1" << std::endl;
-					sent_bytes = send(i, oss.str().c_str(), oss.str().size(), 0);
-					std::cout << "hi 2" << std::endl;
-
-					FD_CLR(i, &write_fd);
-					FD_SET(i, &read_fd);
-					clients[i].setIsDone(false);
-					clients[i].body_present = false; 
+					if (!file.is_open())
+						std::cout << "*****error sending buff" << std::endl;
+					if (clients[i].cursor < m_socket_to_response[i].size())
+					{
+						bytes_read =  std::min(m_socket_to_response[i].size() - clients[i].cursor, (size_t)2048);
+						memcpy(buffer, m_socket_to_response[i].c_str() + clients[i].cursor, bytes_read);
+						if (bytes_read < 2048)
+						{
+							file.read(buffer + bytes_read, 2048 - bytes_read);
+							bytes_read += file.gcount();
+						}
+					}
+					else 
+					{
+						file.seekg(clients[i].cursor - m_socket_to_response[i].size());
+						file.read(buffer, std::min(clients[i].size_body, (size_t)2048));
+						bytes_read = file.gcount();
+					}
+					sent_bytes = send(i, buffer, bytes_read, 0);
+					if(sent_bytes == -1)
+					{
+						FD_CLR(i, &write_fd);
+						close(i);
+						std::cout << "error sending buff " << clients[i].cursor << " " << m_socket_to_response[i].size() + clients[i].size_body << " " << i << std::endl;
+						clients.erase(i);
+					}
+					else
+					{
+						clients[i].cursor += sent_bytes;
+						if (clients[i].cursor == m_socket_to_response[i].size() + clients[i].size_body)
+						{
+							std::cout << "delete socket from write " << i << std::endl;
+							FD_CLR(i, &write_fd);
+							FD_SET(i, &read_fd);
+							clients[i].setIsDone(false);
+							clients[i].body_present = false; 
+						}
+					}
+					// delete[] buffer;
 					file.close();
+					// buffer[bytes_read -1] = '\0';
+					// std::cout << "Data sent ---> sent: " << sent_bytes << "buffer: " << buffer<< std::endl;
 				}
 				// std::cout << "Size of file: " << hello.size() << std::endl << "buffer: " << std::endl << hello << std::endl;
-				std::cout << "Data sent ---> sent: " << sent_bytes << " ----- total: " << hello.size() << std::endl;
+				// std::cout << "Data sent ---> sent: " << sent_bytes << " ----- total: " << hello.size() << std::endl;
+				
+
+				// exit(0);
 			}
 		}
 	}
