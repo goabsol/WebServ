@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   workshop.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/04 01:31:07 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/06 17:30:27 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/14 20:30:41 by ael-bagh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,13 @@ std::string getFileType(std::string const &file_name)
 		return mime_type.get_mime_type(fn);
 	}
 	return "text/html";
+}
+
+std::string getFileExtension(std::string const &file_name)
+{
+	if(file_name.find_last_of(".") != std::string::npos)
+		return file_name.substr(file_name.find_last_of("."));
+	return "";
 }
 
 std::string craftResponse(ClientRequest &request, int status_code, std::string message)
@@ -93,12 +100,10 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 	get:
 		if (getRequestedResource(file_name, file))
 		{
-			if (getResourceType(file_name) == FILE)
+			if (getResourceType(file_name) == true)
 			{
-			hi:
-				std::string content_type = "text/html";
-				RF["Content-Type"] = getFileType(file_name);
-				gotCGI(request.current_location, content_type, request.method);
+				//RF["Content-Type"] = getFileType(file_name);
+				gotCGI(request, file_name, request.method);
 			}
 			else
 			{
@@ -148,11 +153,10 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 	{
 		if (getRequestedResource(file_name, file))
 		{
-			if (getResourceType(file_name) == FILE)
+			if (getResourceType(file_name) == true)
 			{
-				std::string content_type = "text/html";
 				RF["Content-Type"] = getFileType(file_name);
-				if (!gotCGI(request.current_location, content_type, request.method))
+				if (!gotCGI(request, RF["Content-Type"], request.method))
 					return (craftResponse(request, 204, "No Content"));
 			}
 			else
@@ -160,7 +164,7 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 				if (*(request.requestURI.end() - 1) != '/')
 					return (craftResponse(request, 409, "Conflict"));
 				std::string content_type = "text/html";
-				if (gotCGI(request.current_location, content_type, request.method))
+				if (gotCGI(request, content_type, request.method))
 				{
 					std::string index;
 					if (indexInDir(request.current_location.index, request.requestURI, index))
@@ -259,7 +263,7 @@ bool getResourceType(std::string &path)
 	lstat(path.c_str(), &file_info);
 	if ((file_info.st_mode & S_IFMT) == S_IFDIR)
 		return DIRECTORY;
-	return FILE;
+	return true;
 }
 
 bool indexInDir(std::vector<std::string> &indexes, std::string &dir, std::string &found)
@@ -278,10 +282,59 @@ bool indexInDir(std::vector<std::string> &indexes, std::string &dir, std::string
 	return false;
 }
 
-bool gotCGI(Location_T &location, std::string &tail, std::string &method)
+bool gotCGI(ClientRequest &request, std::string &file_name, std::string &method)
 {
 	// CGI that shit (plz )
-	
+	//set headers
+	//path
+	std::string path = request.requestURI;
+	std::map<std::string, std::string> cgi = request.current_location.cgi;
+	std::string extension = getFileExtension(file_name);
+	if (cgi.find(extension) != cgi.end())
+	{
+		char** args = new char*[3];
+		args[0] = strdup(cgi[extension].c_str());
+		args[1] = strdup(path.c_str());
+		args[2] = NULL;
+		//set environement variables
+		char**env = new char*[2];
+		env[0] = strdup(std::string("QUERY_STRING="+request.queryString).c_str());
+		env[1] = NULL;
+		/////////////////////////////
+		pid_t pid = fork();
+		int fd[2];
+		if (pipe(fd) < 0)
+			throw("pipeError");
+		if (pid == 0)
+		{
+			if (method == "POST")
+			{
+				int body = open(request.rq_name.c_str(), O_RDWR);
+				dup2(body, 0);
+			}
+			close(fd[0]);
+			dup2(fd[1], 1);
+			close(fd[1]);
+			execve(cgi[extension].c_str(),args,env);
+		}
+		else
+		{
+			char buff[1024];
+			std::string response = "";
+			int count = 0;
+			close(fd[1]);
+			FILE *f = fdopen(fd[0],"r");
+			int sum = 0;
+			while ((count = read(fd[0], buff, 1024)) != 0)
+			{
+				sum += count;
+				response += std::string(buff);
+			}
+			std::string header = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: "+ std::to_string(count)+"\r\n"+"Server: tobechanged"+"\r\n\r\n"+response;
+		}
+	}
+	else
+		return false;
 	return (true);
 }
 
@@ -301,7 +354,7 @@ bool emptyDir(std::string &dir)
 				if (strcmp(ep->d_name, ".") != 0 && strcmp(ep->d_name, "..") != 0)
 				{
 					std::string file_name = dir + ep->d_name;
-					if (getResourceType(file_name) == FILE)
+					if (getResourceType(file_name) == true)
 						remove(file_name.c_str());
 					else
 						return false;
