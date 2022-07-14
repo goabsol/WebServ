@@ -12,26 +12,26 @@
 
 #include "socket.hpp"
 
-std::string decToHexa(int n) 
-{ 
+std::string decToHexa(int n)
+{
 	std::stringstream ss;
 	ss << std::hex << n;
 	return (ss.str());
 }
 
-int    sockinit(parser_T parser)
+int sockinit(parser_T parser)
 {
-    std::map<SOCKET,ClientRequest>clients;
-    std::map<SOCKET,ClientRequest>clts_ongoing_requests;
-    struct sockaddr_in johnny; 
-    SOCKET server_fd;
+	std::map<SOCKET, ClientRequest> clients;
+	std::map<SOCKET, ClientRequest> clts_ongoing_requests;
+	struct sockaddr_in johnny;
+	SOCKET server_fd;
 	SOCKET max_fd = 0;
 	const int enable = 1;
 	fd_set read_fd;
 	FD_ZERO(&read_fd);
 	std::map<SOCKET, Server_T> m_socket_to_server;
 	std::map<SOCKET, std::string> m_socket_to_response;
-	//create socket for each port
+	// create socket for each port
 	for (size_t i = 0; i < parser.servers.size(); i++)
 	{
 		for (size_t j = 0; j < parser.servers[i].ports.size(); j++)
@@ -42,7 +42,7 @@ int    sockinit(parser_T parser)
 				std::cout << "Error opening socket" << std::endl;
 				return 1;
 			}
-			//setting socket options to reuse address
+			// setting socket options to reuse address
 			if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
 				std::cout << "setsockopt(SO_REUSEADDR) failed" << std::endl;
 			memeset(&johnny, 0, sizeof(johnny));
@@ -50,52 +50,52 @@ int    sockinit(parser_T parser)
 			// std::cout << parser.servers[i].ports[j].second << " " << parser.servers[i].ports[j].first << std::endl;
 			johnny.sin_addr.s_addr = inet_addr(parser.servers[i].ports[j].first.c_str());
 			johnny.sin_port = htons(parser.servers[i].ports[j].second);
-			//bind socket to port
+			// bind socket to port
 			if (bind(server_fd, (struct sockaddr *)&johnny, sizeof(johnny)) < 0)
 			{
 				std::cerr << strerror(errno) << std::endl;
 				std::cerr << "Error binding socket" << std::endl;
 				return 1;
 			}
-			//listen for connections
+			// listen for connections
 			if (listen(server_fd, 5) < 0)
 			{
 				std::cerr << "Error listening on socket" << std::endl;
 				return 1;
 			}
-			//add socket to read_fd
+			// add socket to read_fd
 			FD_SET(server_fd, &read_fd);
 			if (server_fd > max_fd)
 				max_fd = server_fd;
-			//store (socket, server) in map
+			// store (socket, server) in map
 			m_socket_to_server[server_fd] = parser.servers[i];
 		}
 	}
-	//safekeeping server sockets in master
+	// safekeeping server sockets in master
 	fd_set master = read_fd;
 	fd_set write_fd;
 	FD_ZERO(&write_fd);
 	while (1)
 	{
-		//making copies of read_fd and write_fd to avoid modifying the original with select
+		// making copies of read_fd and write_fd to avoid modifying the original with select
 		fd_set rcopy = read_fd;
 		fd_set wcopy = write_fd;
 		struct timeval timeout;
 		SOCKET socket_to_close;
-		
+
 		get_nearest_timeout(timeout, socket_to_close, clts_ongoing_requests);
 		std::cout << "TO test " << clts_ongoing_requests.empty() << " if not empty the closest to be closed: " << socket_to_close;
 		std::cout << " in " << timeout.tv_sec << "," << timeout.tv_usec << std::endl;
-		//selecting sockets to read/write (multiplexing)
+		// selecting sockets to read/write (multiplexing)
 		int select_return = select(max_fd + 1, &rcopy, &wcopy, NULL, (clts_ongoing_requests.empty() ? NULL : &timeout));
 		if (select_return < 0)
 		{
 			std::cerr << "Error in select" << std::endl;
 			return 1;
 		}
-		else if(select_return == 0)
+		else if (select_return == 0)
 		{
-			std::cout << "Connection closedddd"  << std::endl;
+			std::cout << "Connection closedddd" << std::endl;
 			FD_CLR(socket_to_close, &read_fd);
 			FD_CLR(socket_to_close, &write_fd);
 			close(socket_to_close);
@@ -104,10 +104,10 @@ int    sockinit(parser_T parser)
 		}
 		for (int i = 1; i <= max_fd; i++)
 		{
-			if (FD_ISSET(i, &rcopy)) //if socket is ready to read
+			if (FD_ISSET(i, &rcopy)) // if socket is ready to read
 			{
 				// std::cout << "Socket " << i << " of " << m_socket_to_server[i].name << " is ready for reading" << std::endl;
-				if (FD_ISSET(i, &master)) //if socket is a server socket create a new connection and add to read_fd
+				if (FD_ISSET(i, &master)) // if socket is a server socket create a new connection and add to read_fd
 				{
 					std::cout << "New connection" << std::endl;
 					struct sockaddr_in client_addr;
@@ -128,7 +128,8 @@ int    sockinit(parser_T parser)
 					clients[client_fd] = ClientRequest(client_fd, m_socket_to_server[i]);
 					break;
 				}
-				else {
+				else
+				{
 					// if (clients.find(i) == clients.end())
 					// {
 					// 	clients[i] = ClientRequest(i);
@@ -144,7 +145,7 @@ int    sockinit(parser_T parser)
 						{
 							// if (clts_ongoing_requests.find(i) == clts_ongoing_requests.end())
 							// {
-							clts_ongoing_requests.erase(i); //not really conviced about the timeout reseting every time a request is appended instead of only when the request is done. -to discuss later
+							clts_ongoing_requests.erase(i); // not really conviced about the timeout reseting every time a request is appended instead of only when the request is done. -to discuss later
 							gettimeofday(&(clients[i].start_time), NULL);
 							clts_ongoing_requests[i] = clients[i];
 							std::cout << "Reading from socket " << i << std::endl;
@@ -154,18 +155,17 @@ int    sockinit(parser_T parser)
 							if (clients[i].getIsDone())
 								m_socket_to_response[i] = craftResponse(clients[i]);
 						}
-						catch(http_error_exception& e)
+						catch (http_error_exception &e)
 						{
 							std::cout << e.what() << std::endl;
 							clients[i].setIsDone(true);
 							clients[i].clearData();
 							m_socket_to_response[i] = craftResponse(clients[i], e.code, e.message);
 						}
-
 					}
 					if (clients[i].getHasError() || clients[i].getConnectionClosed())
 					{
-						std::cout << (clients[i].getHasError()?clients[i].getError() : "Connection closed")  << std::endl;
+						std::cout << (clients[i].getHasError() ? clients[i].getError() : "Connection closed") << std::endl;
 						FD_CLR(i, &read_fd);
 						FD_CLR(i, &write_fd);
 						close(i);
@@ -181,7 +181,7 @@ int    sockinit(parser_T parser)
 					}
 				}
 			}
-			else if (FD_ISSET(i, &wcopy)) //if socket is ready to write, send response
+			else if (FD_ISSET(i, &wcopy)) // if socket is ready to write, send response
 			{
 				std::string hello = "";
 				int sent_bytes = 0;
@@ -189,7 +189,7 @@ int    sockinit(parser_T parser)
 				{
 					hello = m_socket_to_response[i];
 					std::cout << "response size " << hello.size() << std::endl;
-					sent_bytes = send(i,hello.c_str(),hello.size(),0);
+					sent_bytes = send(i, hello.c_str(), hello.size(), 0);
 					if (sent_bytes < hello.size())
 					{
 						m_socket_to_response[i] = hello.substr(sent_bytes);
@@ -203,49 +203,19 @@ int    sockinit(parser_T parser)
 				}
 				else
 				{
-					////////////////////////////////////////////////////////////////////////////////// MAY GOD HELP US ////////////////////////////////////////////////////////////////////////////////
-					////////////////////////////////////////////////////////////////////////////////// MAY GOD HELP US ////////////////////////////////////////////////////////////////////////////////
-					////////////////////////////////////////////////////////////////////////////////// MAY GOD HELP US ////////////////////////////////////////////////////////////////////////////////
-					////////////////////////////////////////////////////////////////////////////////// MAY GOD HELP US ////////////////////////////////////////////////////////////////////////////////
-					////////////////////////////////////////////////////////////////////////////////// MAY GOD HELP US ////////////////////////////////////////////////////////////////////////////////
-					////////////////////////////////////////////////////////////////////////////////// kill me with a brick ////////////////////////////////////////////////////////////////////////////////
-					////////////////////////////////////////////////////////////////////////////////// MAY GOD HELP US ////////////////////////////////////////////////////////////////////////////////
-					////////////////////////////////////////////////////////////////////////////////// MAY GOD HELP US ////////////////////////////////////////////////////////////////////////////////
-					// std::fstream file(clients[i].file_name,  std::ios::in| std::ios::ate| std::ifstream::binary);
-					// file.seekg(-clients[i].bytes_read, file.end);
-					// long long size_f = file.tellg();
-					// std::cout << "bytes to read " << size_f << std::endl;
-					// file.seekg(clients[i].bytes_read, file.beg);
-					// if (size_f > 64000)
-					// 	size_f = 64000;
-					// char *buffer;
-					// buffer = new char[size_f];
-					// file.read(buffer, size_f);
-					// clients[i].bytes_read += size_f;
-					// hello = std::string(buffer, size_f);
-					// std::vector<char> v(hello.begin(), hello.end());
-					// std::vector<char>::iterator it;
-					// std::cout << std::string(hello.c_str()).size() << std::endl;
-					// sent_bytes = send(i,&(*it),hello.size(),0);
-					// if (size_f < 64000)
-					// {
-					// 	std::cout << "goes here ewfew fewf ewf ewf ew" << std::endl;
-					// 	clients[i].body_present = false;
-					// 	int sent_bytes = 0;
-					// 	if (sent_bytes < hello.size())
-					// 	{
-					// 		m_socket_to_response[i] = hello.substr(sent_bytes);
-					// 	}
-					// 	else
-					// 	{
-					// 		FD_CLR(i, &write_fd);
-					// 		FD_SET(i, &read_fd);
-					// 	}
-					// 	clients[i].setIsDone(false);
-					// }
-					// file.close();
-					// // std::cout << clients[i].getData() << std::endl;
-					////////////////////////////////////////////////////////////////////////////////// MAY GOD HELP US ////////////////////////////////////////////////////////////////////////////////
+					std::stringstream oss;
+					std::fstream file(clients[i].file_name, std::ios::in | std::ios::binary);
+					oss << m_socket_to_response[i] << ("Content-Length: " + std::to_string(file.tellg()) + "\r\n\r\n") << file.rdbuf();
+
+					std::cout << "hi 1" << std::endl;
+					sent_bytes = send(i, oss.str().c_str(), oss.str().size(), 0);
+					std::cout << "hi 2" << std::endl;
+
+					FD_CLR(i, &write_fd);
+					FD_SET(i, &read_fd);
+					clients[i].setIsDone(false);
+					clients[i].body_present = false; 
+					file.close();
 				}
 				// std::cout << "Size of file: " << hello.size() << std::endl << "buffer: " << std::endl << hello << std::endl;
 				std::cout << "Data sent ---> sent: " << sent_bytes << " ----- total: " << hello.size() << std::endl;

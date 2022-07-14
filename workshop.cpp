@@ -202,6 +202,7 @@ send:
 		long long size_f = file.tellg();
 		if (size_f < 64000)
 		{
+		
 			char *buffer;
 			buffer = new char[size_f + 1];
 			buffer[size_f] = '\0';
@@ -210,7 +211,8 @@ send:
 			
 			std::cout << "size : " << size_f << std::endl;
 			std::cout << "hello" << std::endl;
-			 // for body
+				// for body
+			response += "Content-Length: " + std::to_string(size_f) + "\r\n\r\n";
 			response += std::string(buffer, size_f);
 			std::cout << buffer << std::endl;
 			request.body_present = false;
