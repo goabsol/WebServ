@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ClientRequest.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/15 12:36:23 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/15 17:25:22 by ael-bagh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -442,7 +442,9 @@ void ClientRequest::storeRequest()
 	size_t bytes_read = 0;
 	std::vector<std::string> lines;
 	bytes_read = recv(this->Socket, buffer, 1024, 0);
+	std::cout << "bytes read" << bytes_read << std::endl;
 	this->new_data = true;
+	std::cout << "Hi?" << std::endl;
 	if (bytes_read > 0)
 	{
 		this->data += std::string(buffer, buffer + bytes_read);
@@ -450,6 +452,7 @@ void ClientRequest::storeRequest()
 		{
 			trimwspace(this->data);
 		}
+		std::cout << "Data : |" << this->data << "|" << std::endl;
 	}
 	else if (bytes_read == 0)
 	{

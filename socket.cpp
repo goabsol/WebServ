@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/09 07:34:47 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/14 21:01:12 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/15 17:28:24 by ael-bagh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -154,12 +154,14 @@ int sockinit(parser_T parser)
 							clts_ongoing_requests.erase(i); // not really conviced about the timeout reseting every time a request is appended instead of only when the request is done. -to discuss later
 							gettimeofday(&(clients[i].start_time), NULL);
 							clts_ongoing_requests[i] = clients[i];
-							std::cout << "Reading from socket " << i << std::endl;
 							// std::cout << "Start time: " << clients[i].start_time.tv_sec << "," << clients[i].start_time.tv_usec << std::endl;
 							// }
+							std::cout << "Reading from socket " << i << std::endl;
 							clients[i].storeRequest();
 							if (clients[i].getIsDone())
+							{
 								m_socket_to_response[i] = craftResponse(clients[i]);
+							}
 						}
 						catch (http_error_exception &e)
 						{

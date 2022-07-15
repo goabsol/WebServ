@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   workshop.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/04 01:31:07 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/15 14:25:03 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/15 17:49:40 by ael-bagh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,7 +91,7 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 		{
 			if (getResourceType(request.file_name) == true)
 			{
-				//RF["Content-Type"] = getFileType(file_name);
+				RF["Content-Type"] = getFileType(request.file_name);
 				if(gotCGI(request, request.file_name, response))
 					return (response);
 			}
@@ -293,7 +293,6 @@ bool gotCGI(ClientRequest &request, std::string &file_name, std::string &respons
 	// CGI that shit (plz )
 	//set headers
 	//path
-	std::cout << "CGIIIIIIIIIII" << std::endl;
 	std::string path = file_name;
 	std::map<std::string, std::string> cgi = request.current_location.cgi;
 	std::string extension = getFileExtension(file_name);
@@ -309,10 +308,10 @@ bool gotCGI(ClientRequest &request, std::string &file_name, std::string &respons
 		env[0] = strdup(std::string("QUERY_STRING="+request.queryString).c_str());
 		env[1] = NULL;
 		/////////////////////////////
-		pid_t pid = fork();
 		int fd[2];
 		if (pipe(fd) < 0)
 			throw("pipeError");
+		pid_t pid = fork();
 		if (pid == 0)
 		{
 			if (request.method == "POST")
@@ -321,40 +320,43 @@ bool gotCGI(ClientRequest &request, std::string &file_name, std::string &respons
 				dup2(body, 0);
 			}
 			close(fd[0]);
-			dup2(fd[1], 1);
+			if (dup2(fd[1], 1) == - 1)
+				std::cerr << "duperror" << std::endl;
 			close(fd[1]);
-			std::cout << cgi[extension] << std::endl;
 			execve(cgi[extension].c_str(),args,env);
+			exit(1);
 			std::cerr << "execve error" << std::endl;
 		}
 		else
 		{
 			waitpid(pid, NULL, 0);
-			char buff[1024];
+			char *buff = new char[1025];
 			std::string message = "";
-			int count = 0;
+			int count;
 			close(fd[1]);
 			int sum = 0;
 			std::cerr << "waiting for response" << std::endl;
-			if (lseek(fd[0],0,0) < 0)
-				std::cerr << "lseek error" << std::endl;
-			while ((count = read(fd[0], buff, 1024)) != 0)
+			std::cerr << fd[1] << std::endl;
+			while ((count = read(fd[0], buff, 1024)) > 0)
 			{
-				int i = 0;
-				std::cerr << i << std::endl;
-				i++;
+				buff[count] = '\0';
 				sum += count;
 				message += std::string(buff);
+				std::cerr << count << std::endl;
 			}
-			std::cerr << count << std::endl;
-			std::string header = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: "+ std::to_string(count)+"\r\n"+"Server: tobechanged"+"\r\n\r\n";
+			delete [] buff;
+			//if php add 
+			std::string header = "HTTP/1.1 200 OK\r\nContent-Length: "+ std::to_string(sum)+"\r\n"+"Server: "+request.server.server_name+"\r\n"+"Connection: "+request.requestFields["Connection"]+"\r\n";
+			if (extension == ".py")
+				header += "Content-Type: text/html\r\n\r\n";
 			response = header + message;
-			std::cout << response << std::endl;
 			close(fd[0]);
 		}
 	}
 	else
-		return false;
+	{
+		return (false);
+	}
 	return (true);
 }
 
