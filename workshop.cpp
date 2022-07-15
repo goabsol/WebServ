@@ -346,6 +346,15 @@ bool gotCGI(ClientRequest &request, std::string &file_name, std::string &respons
 			}
 			delete [] buff;
 			//if php add 
+			if (extension == ".php")
+			{
+				size_t pos = message.find("\r\n\r\n");
+				std::cout << "pos : " << pos << std::endl;
+				if (pos != std::string::npos)
+				{
+					sum -= pos + 4;
+				}
+			}
 			std::string header = "HTTP/1.1 200 OK\r\nContent-Length: "+ std::to_string(sum)+"\r\n"+"Server: "+request.server.server_name+"\r\n"+"Connection: "+request.requestFields["Connection"]+"\r\n";
 			if (extension == ".py")
 				header += "Content-Type: text/html\r\n\r\n";
