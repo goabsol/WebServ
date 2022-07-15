@@ -23,7 +23,7 @@ bool getRequestedResource(std::string &resource, std::fstream &file);
 bool getResourceType(std::string &path);
 bool indexInDir(std::vector<std::string> &indexes, std::string &dir, std::string &found);
 bool getAutoIndex(Location_T &location);
-bool gotCGI(ClientRequest &request, std::string &file_name, std::string &method);
+bool gotCGI(ClientRequest &request, std::string &file_name, std::string &response);
 std::string makeautoindex(std::string &root, std::string &dir);
 
 

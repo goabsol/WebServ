@@ -6,7 +6,7 @@
 /*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/04 01:31:07 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/15 12:39:06 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/15 14:25:03 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,7 +92,8 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 			if (getResourceType(request.file_name) == true)
 			{
 				//RF["Content-Type"] = getFileType(file_name);
-				gotCGI(request, request.file_name, request.method);
+				if(gotCGI(request, request.file_name, response))
+					return (response);
 			}
 			else
 			{
@@ -287,12 +288,13 @@ bool indexInDir(std::vector<std::string> &indexes, std::string &dir, std::string
 	return false;
 }
 
-bool gotCGI(ClientRequest &request, std::string &file_name, std::string &method)
+bool gotCGI(ClientRequest &request, std::string &file_name, std::string &response)
 {
 	// CGI that shit (plz )
 	//set headers
 	//path
-	std::string path = request.requestURI;
+	std::cout << "CGIIIIIIIIIII" << std::endl;
+	std::string path = file_name;
 	std::map<std::string, std::string> cgi = request.current_location.cgi;
 	std::string extension = getFileExtension(file_name);
 	if (cgi.find(extension) != cgi.end())
@@ -302,6 +304,7 @@ bool gotCGI(ClientRequest &request, std::string &file_name, std::string &method)
 		args[1] = strdup(path.c_str());
 		args[2] = NULL;
 		//set environement variables
+		std::cerr << path << std::endl;
 		char**env = new char*[2];
 		env[0] = strdup(std::string("QUERY_STRING="+request.queryString).c_str());
 		env[1] = NULL;
@@ -312,7 +315,7 @@ bool gotCGI(ClientRequest &request, std::string &file_name, std::string &method)
 			throw("pipeError");
 		if (pid == 0)
 		{
-			if (method == "POST")
+			if (request.method == "POST")
 			{
 				int body = open(request.rq_name.c_str(), O_RDWR);
 				dup2(body, 0);
@@ -320,22 +323,34 @@ bool gotCGI(ClientRequest &request, std::string &file_name, std::string &method)
 			close(fd[0]);
 			dup2(fd[1], 1);
 			close(fd[1]);
+			std::cout << cgi[extension] << std::endl;
 			execve(cgi[extension].c_str(),args,env);
+			std::cerr << "execve error" << std::endl;
 		}
 		else
 		{
+			waitpid(pid, NULL, 0);
 			char buff[1024];
-			std::string response = "";
+			std::string message = "";
 			int count = 0;
 			close(fd[1]);
-			FILE *f = fdopen(fd[0],"r");
 			int sum = 0;
+			std::cerr << "waiting for response" << std::endl;
+			if (lseek(fd[0],0,0) < 0)
+				std::cerr << "lseek error" << std::endl;
 			while ((count = read(fd[0], buff, 1024)) != 0)
 			{
+				int i = 0;
+				std::cerr << i << std::endl;
+				i++;
 				sum += count;
-				response += std::string(buff);
+				message += std::string(buff);
 			}
-			std::string header = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: "+ std::to_string(count)+"\r\n"+"Server: tobechanged"+"\r\n\r\n"+response;
+			std::cerr << count << std::endl;
+			std::string header = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: "+ std::to_string(count)+"\r\n"+"Server: tobechanged"+"\r\n\r\n";
+			response = header + message;
+			std::cout << response << std::endl;
+			close(fd[0]);
 		}
 	}
 	else
