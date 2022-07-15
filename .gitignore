@@ -9,3 +9,4 @@ webserv
 *.o
 *.mp4
 main.cpp
+file.conf

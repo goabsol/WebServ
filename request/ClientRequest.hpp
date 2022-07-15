@@ -62,6 +62,12 @@ class ClientRequest
 		bool new_data;
 		size_t content_len;
 		std::string queryString;
+		bool body_present;
+		std::string file_name;
+		long		bytes_read;
+		bool next_is_zero;
+		std::streamsize cursor;
+		size_t size_body;
 };
 
 std::ostream &			operator<<( std::ostream & o, ClientRequest const & i );
