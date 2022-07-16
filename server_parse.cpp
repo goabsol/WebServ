@@ -66,6 +66,7 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i, parser_T *parser)
 	this->autoindex_set = false;
 	this->root_set = false;
 	this->index_set = false;
+	int st = i;
 	i+=2;
 	while (tokens[i].type != RIGHTBRACE)
 	{
@@ -233,6 +234,14 @@ Server_T::Server_T(std::vector<token_T> tokens, size_t &i, parser_T *parser)
 			print_and_exit(" invalid token", tokens[i].line);
 		}
 		i++;
+	}
+	if (this->server_name == "")
+	{
+		print_and_exit("server name not set", st);
+	}
+	else if (this->ports.size() == 0)
+	{
+		print_and_exit("no ports set", st);
 	}
 }
 
