@@ -164,6 +164,15 @@ Location_T::Location_T(std::vector<token_T> &tokens, size_t &i, Server_T *server
 				this->error_pages[tmp_error.first] = tmp_error.second;
 
 			}
+			else if (tokens[i].value == "upload_store")
+			{
+				i++;
+				if (this->upload_store_set)
+				{
+					print_and_exit("Error: upload_store already set", tokens[i].line);
+				}
+				this->upload_store = tokens[i].value;
+			}
 			else
 			{
 				print_and_exit("Error: invalid location parameter", tokens[i].line);
