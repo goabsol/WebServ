@@ -16,11 +16,15 @@
 #include <fstream>
 #include <fcntl.h>
 #include <exception>
+#include <cmath>
+
 
 #define SOCKET int
 
 
 std::vector<std::string> split_white_space(std::string &line);
+
+long ipv4_to_long(std::string &value);
 
 int location_start(std::vector<std::string> &lines, int start);
 
