@@ -211,6 +211,7 @@ int sockinit(parser_T parser)
 						std::cout << "delete socket from write " << i << std::endl;
 						FD_CLR(i, &write_fd);
 						FD_SET(i, &read_fd);
+						std::remove(clients[i].rq_name.c_str());
 					}
 					clients[i].setIsDone(false);
 				}

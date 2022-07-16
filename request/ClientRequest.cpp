@@ -475,10 +475,18 @@ void ClientRequest::storeRequest()
 	while (((this->data.find("\r\n") != std::string::npos) || this->requestPosition == 2) && (this->data != "" && (this->size == 0 || this->new_data)))
 	{
 		parseRequest();
+		// std::cout << "Request: " << this->data << std::endl;
 		if (this->requestPosition == 2)
 		{
 			if (this->requestFields.find("Transfer-Encoding") != this->requestFields.end() && this->data.find("\r\n") == std::string::npos)
 			{
+				if (this->requestFields["Transfer-Encoding"] != "chunked")
+				{
+					this->hasError = true;
+					this->errorMessage = "Error: Request line field not valid";
+					/* ERROR 501 */
+					throw http_error_exception(501, "Not Implemented");
+				}
 				return;
 			}
 		}
@@ -488,6 +496,7 @@ void ClientRequest::storeRequest()
 		}
 		if (this->requestPosition == 2 && this->requestFields.find("Content-Length") == this->requestFields.end() && this->requestFields.find("Transfer-Encoding") == this->requestFields.end())
 		{
+			
 			this->isDone = true;
 			return;
 		}
