@@ -32,6 +32,7 @@ int sockinit(parser_T parser)
 	std::map<SOCKET, Server_T> m_socket_to_server;
 	std::map<SOCKET, std::string> m_socket_to_response;
 	// create socket for each port
+	std::map<int, std::pair<long, long> > m_socket_to_addr;
 	for (size_t i = 0; i < parser.servers.size(); i++)
 	{
 		for (size_t j = 0; j < parser.servers[i].ports.size(); j++)
@@ -52,6 +53,8 @@ int sockinit(parser_T parser)
 			// std::cout << parser.servers[i].ports[j].second << " " << parser.servers[i].ports[j].first << std::endl;
 			johnny.sin_addr.s_addr = inet_addr(parser.servers[i].ports[j].first.c_str());
 			johnny.sin_port = htons(parser.servers[i].ports[j].second);
+			m_socket_to_addr[server_fd] = std::make_pair(inet_addr(parser.servers[i].ports[j].first.c_str()), parser.servers[i].ports[j].second);
+			
 			// bind socket to port
 			if (bind(server_fd, (struct sockaddr *)&johnny, sizeof(johnny)) < 0)
 			{
@@ -129,7 +132,7 @@ int sockinit(parser_T parser)
 						max_fd = client_fd;
 					m_socket_to_server[client_fd] = m_socket_to_server[i];
 					// std::cout << i << " " << client_fd << std::endl;
-					clients[client_fd] = ClientRequest(client_fd, m_socket_to_server[i]);
+					clients[client_fd] = ClientRequest(client_fd, m_socket_to_server[i], m_socket_to_addr[i].first, m_socket_to_addr[i].second);
 					std::cout << "accept socket " << client_fd << std::endl;
 					break;
 				}

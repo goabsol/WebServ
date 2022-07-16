@@ -35,15 +35,17 @@ ClientRequest::ClientRequest(const ClientRequest &src)
 	*this = src;
 }
 
-ClientRequest::ClientRequest(int socket, Server_T &server) : Socket(socket), data(""),
+ClientRequest::ClientRequest(int socket, Server_T &server, long addr, long port) : Socket(socket), data(""),
       requestPosition(0), hasError(false), isDone(false), closeConnection(false),
       server(server), current_location(Location_T()), size(0), size_set(false),
 	  expect_newline(false), rq_size(0), rp_size(0), content_len(0), body_present(false),
-	  bytes_read(0), file_name(""), next_is_zero(false), cursor(0), size_body(0)
+	  bytes_read(0), file_name(""), next_is_zero(false), cursor(0), size_body(0), client_host(addr), client_port(port)
 
 {
 	this->rq_name = std::string("tmp_files/") + "rq_tmp_" + std::to_string(socket) + ".txt";
 	this->rp_name = std::string("tmp_files/") + "rp_tmp_" + std::to_string(socket) + ".txt";
+	std::cout << "addr : " << addr << std::endl;
+	std::cout << "port : " << port << std::endl;
 }
 
 /*
@@ -93,6 +95,9 @@ ClientRequest &ClientRequest::operator=(ClientRequest const &rhs)
 		this->next_is_zero = rhs.next_is_zero;
 		this->file_name = rhs.file_name;
 		this->size_body = rhs.size_body;
+		this->client_host = rhs.client_host;
+		this->client_port = rhs.client_port;
+
 	}
 	return *this;
 }
@@ -300,8 +305,8 @@ void ClientRequest::parseRequest()
 			std::string p(strtok(l, ": "));
 			std::string v(strtok(NULL, ": "));
 			// CHECK V WITH P
-
 			requestFields[p] = v;
+			
 		}
 		else
 		{
