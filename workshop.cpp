@@ -6,7 +6,7 @@
 /*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/04 01:31:07 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/15 17:49:40 by ael-bagh         ###   ########.fr       */
+/*   Updated: 2022/07/16 16:07:35 by ael-bagh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -294,6 +294,7 @@ bool gotCGI(ClientRequest &request, std::string &file_name, std::string &respons
 	//set headers
 	//path
 	std::string path = file_name;
+	std::cout << file_name << std::endl;
 	std::map<std::string, std::string> cgi = request.current_location.cgi;
 	std::string extension = getFileExtension(file_name);
 	if (cgi.find(extension) != cgi.end())
@@ -304,10 +305,13 @@ bool gotCGI(ClientRequest &request, std::string &file_name, std::string &respons
 		args[2] = NULL;
 		//set environement variables
 		std::cerr << path << std::endl;
-		char**env = new char*[2];
+		char**env = new char*[5];
 		env[0] = strdup(std::string("QUERY_STRING="+request.queryString).c_str());
-		env[1] = NULL;
-		/////////////////////////////
+		env[1] = strdup("SERVER_PROTOCOL=HTTP/1.1");
+		env[2] = strdup(std::string("PATH_INFO="+file_name).c_str());
+		env[3] = strdup(std::string("DOCUMENT_ROOT="+request.current_location.root).c_str());
+		env[4] = NULL;
+		////////////////////////////////////////////////////////////////////////////////////////
 		int fd[2];
 		if (pipe(fd) < 0)
 			throw("pipeError");
