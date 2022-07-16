@@ -6,7 +6,7 @@
 /*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/15 17:25:22 by ael-bagh         ###   ########.fr       */
+/*   Updated: 2022/07/16 22:59:07 by ael-bagh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -301,9 +301,11 @@ void ClientRequest::parseRequest()
 		}
 		if (line.find(": ") != std::string::npos)
 		{
-			char *l = strdup(line.c_str());
-			std::string p(strtok(l, ": "));
-			std::string v(strtok(NULL, ": "));
+			
+			std::string p;
+			std::string v;
+			p = line.substr(0, line.find(':'));
+			v = line.substr(line.find(":") + 1);
 			// CHECK V WITH P
 			requestFields[p] = v;
 			
@@ -444,7 +446,7 @@ void ClientRequest::storeRequest()
 	}
 	char *buffer = new char[1024];
 	memeset(buffer, 0, 1024);
-	size_t bytes_read = 0;
+	long bytes_read = 0;
 	std::vector<std::string> lines;
 	bytes_read = recv(this->Socket, buffer, 1024, 0);
 	std::cout << "bytes read" << bytes_read << std::endl;
@@ -453,6 +455,7 @@ void ClientRequest::storeRequest()
 	if (bytes_read > 0)
 	{
 		this->data += std::string(buffer, buffer + bytes_read);
+		std::cerr << "DAAAATAAAA : " << this->data << std::endl;
 		if (this->requestPosition == 0)
 		{
 			trimwspace(this->data);
