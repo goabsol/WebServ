@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
+/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/09 07:34:47 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/16 16:50:17 by ael-bagh         ###   ########.fr       */
+/*   Updated: 2022/07/17 00:06:02 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -184,7 +184,7 @@ int sockinit(parser_T parser)
 					}
 					else if (clients[i].getIsDone())
 					{
-						std::cout << "Data: " << i << " " << clients[i].getData() << " " << clients.size() << std::endl;
+						// std::cout << "Data: " << i << " " << clients[i].getData() << " " << clients.size() << std::endl;
 						clts_ongoing_requests.erase(i);
 						FD_CLR(i, &read_fd);
 						FD_SET(i, &write_fd);

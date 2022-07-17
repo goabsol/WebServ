@@ -3,25 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   ClientRequest.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
+/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/16 22:59:07 by ael-bagh         ###   ########.fr       */
+/*   Updated: 2022/07/17 01:30:15 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ClientRequest.hpp"
 
-const std::string tmp[] = {"GET",
-						   "POST",
-						   "PUT",
-						   "DELETE",
-						   "HEAD",
-						   "OPTIONS",
-						   "CONNECT",
-						   "TRACE"};
-
-const std::vector<std::string> v_methods(tmp, tmp + 8);
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
@@ -187,6 +177,7 @@ bool ClientRequest::locationExists(std::string &request)
 	}
 	if (valid_locations.size())
 	{
+		std::cout << "hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii " << std::endl;
 		sort(valid_locations.begin(), valid_locations.end(), sortlocation);
 		this->current_location = valid_locations.back().second;
 		this->current_location_path = valid_locations.back().first;
@@ -305,7 +296,7 @@ void ClientRequest::parseRequest()
 			std::string p;
 			std::string v;
 			p = line.substr(0, line.find(':'));
-			v = line.substr(line.find(":") + 1);
+			v = line.substr(line.find(":") + 2);
 			// CHECK V WITH P
 			requestFields[p] = v;
 			
@@ -455,12 +446,12 @@ void ClientRequest::storeRequest()
 	if (bytes_read > 0)
 	{
 		this->data += std::string(buffer, buffer + bytes_read);
-		std::cerr << "DAAAATAAAA : " << this->data << std::endl;
+		// std::cerr << "DAAAATAAAA : " << this->data << std::endl;
 		if (this->requestPosition == 0)
 		{
 			trimwspace(this->data);
 		}
-		std::cout << "Data : |" << this->data << "|" << std::endl;
+		// std::cout << "Data : |" << this->data << "|" << std::endl;
 	}
 	else if (bytes_read == 0)
 	{

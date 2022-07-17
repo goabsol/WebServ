@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   workshop.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
+/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/04 01:31:07 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/16 23:02:56 by ael-bagh         ###   ########.fr       */
+/*   Updated: 2022/07/17 02:37:22 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,9 +127,41 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 	}
 	else if (request.method == "POST")
 	{
+		std::cout << "POST " << request.file_name << request.current_location.root << request.current_location.upload_store_set<< std::endl;
 		if (request.current_location.upload_store_set)
 		{
-			// upload
+			std::vector<std::string> dirs = split(request.requestURI, '/');
+			std::string dir = request.current_location.upload_store;
+			for (std::vector<std::string>::iterator it = dirs.begin(); it != dirs.end() - 1; it++)
+			{
+				std::cout<<*it<<std::endl;
+				std::string i = *it;
+				dir += i + "/";
+				if (dir.size() > 0)
+				{
+					if (access(dir.c_str(), F_OK) != 0)
+						mkdir(dir.c_str(), 0777);
+				}
+			}
+			request.file_name = request.current_location.upload_store + request.requestURI;
+			std::cout << "file name : " << request.file_name << std::endl;
+			std::ifstream  src(request.rq_name, std::ios::binary);
+			std::ofstream  dst(request.file_name,   std::ios::binary);
+
+			dst << src.rdbuf();
+			
+			src.close();
+			dst.close();
+			status_code = 201;
+			message = "Created";
+			request.body_present = false;
+			response = "HTTP/1.1 " + std::to_string(status_code) + " " + message + "\r\n";
+			response += "Server: " + request.getServer().server_name + "\r\n";
+			response += "Content-Type: text/html\r\n";
+			response += "Content-Length: 0\r\n";
+			response += "Location: " + request.requestFields["Host"] + request.requestURI + "\r\n\r\n";
+			return(response);
+			
 		}
 		else
 			goto get;
