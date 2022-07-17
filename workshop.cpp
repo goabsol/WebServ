@@ -91,7 +91,7 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 		{
 			if (getResourceType(request.file_name) == true)
 			{
-				RF["Content-Type"] = getFileType(request.file_name);
+				// RF["Content-Type"] = getFileType(request.file_name);
 				if(gotCGI(request, request.file_name, response))
 					return (response);
 			}
@@ -320,6 +320,23 @@ bool indexInDir(std::vector<std::string> &indexes, std::string &dir, std::string
 	return false;
 }
 
+std::string http_toupp(std::string &str)
+{
+	std::string response = "HTTP_";
+
+	// turn lowercase to uppercase and - to _ and add it to response
+	for (int i = 0; i < str.length(); i++)
+	{
+		if (str[i] >= 'a' && str[i] <= 'z')
+			response += str[i] - 32;
+		else if (str[i] == '-')
+			response += '_';
+		else
+			response += str[i];
+	}
+	return response;
+}
+
 bool gotCGI(ClientRequest &request, std::string &file_name, std::string &response)
 {
 	// CGI that shit (plz )
@@ -334,76 +351,11 @@ bool gotCGI(ClientRequest &request, std::string &file_name, std::string &respons
 		args[0] = strdup(cgi[extension].c_str());
 		args[1] = strdup(path.c_str());
 		args[2] = NULL;
-		//set environement variables
-		// char**env = new char*[11];
-		// env[0] = strdup(std::string("QUERY_STRING="+request.queryString).c_str());
-		// env[1] = strdup("SERVER_PROTOCOL=HTTP/1.1");
-		// env[2] = strdup(std::string("PATH_INFO="+file_name).c_str());
-		// env[3] = strdup(std::string("DOCUMENT_ROOT="+request.current_location.root).c_str());
-		// env[4] = strdup(std::string("PORT="+std::to_string(request.client_port)).c_str());
-		// env[5] = strdup(std::string("HTTP_CONTENT_LENGTH="+request.requestFields["Content-Length"]).c_str());
-		// env[6] = strdup(std::string("HTTP_CONTENT_TYPE="+request.requestFields["Content-Type"]).c_str());
-		// env[7] = strdup(std::string("SCRIPT_NAME="+request.current_location_path).c_str());
-		// env[8] = strdup(std::string("SCRIPT_FILENAME="+request.requestURI).c_str());
-		// env[9] = strdup(std::string("HTTP_HOST=localhost").c_str());
-		// env[1] = strdup((std::string("CONTENT_LENGTH=")+request.requestFields["Content-Length"]).c_str());
-		// env[2] = strdup((std::string("CONTENT_TYPE=")+request.requestFields["Content-Type"]).c_str());
-		// env[3] = strdup((std::string("GATEWAY_INTERFACE=")+"CGI/1.1").c_str());
-		// env[4] = strdup((std::string("PATH_INFO=")+request.requestURI).c_str());
-		// env[5] = strdup((std::string("PATH_TRANSLATED=")+request.requestURI).c_str());
-		// env[6] = strdup((std::string("REMOTE_ADDR=")+ "localhost").c_str());
-		// env[7] = strdup((std::string("REMOTE_HOST=")+ "localhost").c_str());
-		// env[8] = strdup((std::string("SCRIPT_NAME=") + file_name).c_str());
-		// env[9] = strdup((std::string("REQUEST_METHOD=") + ))
-		// env[10] = NULL;
-		// setenv("GATEWAY_INTERFACE", "CGI/1.1", 1);
-		// setenv("QUERY_STRING", request.queryString.c_str(), 1);
-		// setenv("CONTENT_LENGTH", request.requestFields["Content-Length"].c_str(), 1);
-		// setenv("CONTENT_TYPE", request.requestFields["Content-Type"].c_str(), 1);
-		// setenv("PATH_INFO", request.requestURI.c_str(), 1);
-		// setenv("PATH_TRANSLATED", request.requestURI.c_str(), 1);
-		// setenv("REMOTE_ADDR", "localhost", 1);
-		// setenv("REMOTE_HOST", "localhost", 1);
-		// setenv("SCRIPT_NAME", "", 1);
-		// setenv("SCRIPT_FILENAME", file_name.c_str(), 1);
-		// setenv("REQUEST_METHOD", request.method.c_str(), 1);
-		// setenv("SERVER_PROTOCOL", "HTTP/1.1", 1);
-		// setenv("SERVER_SOFTWARE", "WEBSERV/1.1", 1);
-		// setenv("SERVER_NAME", request.server.server_name.c_str(), 1);
-		// setenv("SERVER_PORT", std::to_string(request.client_port).c_str(), 1);
-		// setenv("REDIRECT_STATUS", "200", 1);
-		// std::cout << "ENV[6] : " << env[++dd] << std::endl;
-		// std::cout << "ENV[6] : " << env[++dd] << std::endl;
-		// std::cout << "ENV[6] : " << env[++dd] << std::endl;
-		// std::cout << "ENV[6] : " << env[++dd] << std::endl;
-		// std::cout << "ENV[6] : " << env[++dd] << std::endl;
-		// std::cout << "ENV[6] : " << env[++dd] << std::endl;
-		////////////////////////////////////////////////////////////////////////////////////////
-		int fd[2];
-		if (pipe(fd) < 0)
-			throw("pipeError");
+		int res = open(request.rp_name.c_str(), O_RDWR | O_CREAT);
+		std::cout << "open the door" << res << std::endl;
 		pid_t pid = fork();
 		if (pid == 0)
 		{
-			// setenv("GATEWAY_INTERFACE", "CGI/1.1", 1);
-			// setenv("QUERY_STRING", request.queryString.c_str(), 1);
-			// if (request.requestFields.find("Content-Length") != request.requestFields.end())
-			// 	setenv("CONTENT_LENGTH", request.requestFields["Content-Length"].c_str(), 1);
-			// if (request.requestFields.find("Content-Type") != request.requestFields.end())
-			// 	setenv("CONTENT_TYPE", request.requestFields["Content-Type"].c_str(), 1);
-			// std::cerr <<"******>"<<  request.requestFields["Content-Length"].c_str() << std::endl;
-			// setenv("PATH_INFO", request.requestURI.c_str(), 1);
-			// setenv("PATH_TRANSLATED", request.requestURI.c_str(), 1);
-			// setenv("SCRIPT_NAME", "", 1);
-			// setenv("SCRIPT_FILENAME", file_name.c_str(), 1);
-			// // setenv("REMOTE_ADDR", "localhost", 1);
-			// // setenv("REMOTE_HOST", "localhost", 1);
-			// setenv("REQUEST_METHOD", request.method.c_str(), 1);
-			// // setenv("SERVER_PROTOCOL", "HTTP/1.1", 1);
-			// // setenv("SERVER_SOFTWARE", "WEBSERV/1.1", 1);
-			// // setenv("SERVER_NAME", request.server.server_name.c_str(), 1);
-			// // setenv("SERVER_PORT", std::to_string(request.client_port).c_str(), 1);
-			// setenv("REDIRECT_STATUS", "200", 1);
 			std::vector<char *> env;
 			env.push_back(strdup("GATEWAY_INTERFACE=CGI/1.1"));
 			env.push_back(strdup(("QUERY_STRING=" + request.queryString).c_str()));
@@ -421,42 +373,39 @@ bool gotCGI(ClientRequest &request, std::string &file_name, std::string &respons
 			env.push_back(strdup(("SERVER_SOFTWARE=WEBSERV/1.1")));
 			env.push_back(strdup(("SERVER_NAME=" + request.server.server_name).c_str()));
 			env.push_back(strdup(("SERVER_PORT=" + std::to_string(request.client_port)).c_str()));
-			
+			for (std::map<std::string, std::string>::iterator it = request.requestFields.begin(); it != request.requestFields.end(); it++)
+			{
+				std::string key = it->first;
+				std::string value = it->second;
+				env.push_back(strdup((http_toupp(key)+ "=" + value).c_str()));
+			}
 			env.push_back(NULL);
-			// if (request.method == "POST")
-			// {
-				std::cerr <<"*******>>>" <<request.rq_name.c_str() << std::endl;
-				int body = open(request.rq_name.c_str(), O_RDONLY);
-				std::cout << "CHECK_FD : " << body << std::endl;
- 				dup2(body, 0);
-				close(body);
-
-			// 	// std::cout << "|||||||||||||"<< buff << "|||||||||||||"<< std::endl;
-			// }
-			close(fd[0]);
-			if (dup2(fd[1], 1) == - 1)
+			int body = open(request.rq_name.c_str(), O_RDONLY);
+			dup2(body, 0);
+			close(body);
+			if (dup2(res, 1) == - 1)
 				std::cerr << "duperror" << std::endl;
-			close(fd[1]);
+			close(res);
 			execve(cgi[extension].c_str(),args, env.data());
 			exit(1);
 		}
 		else
 		{
-			std::cerr << "hello" << std::endl;
 			waitpid(pid, NULL, 0);
-			std::cerr<< "hello" << std::endl;
 			char *buff = new char[1025];
 			std::string message = "";
-			int count;
-			close(fd[1]);
+			int count;	
 			int sum = 0;
-			while ((count = read(fd[0], buff, 1024)) > 0)
+			lseek(res, 0, SEEK_SET);
+			while ((count = read(res, buff, 1024)) > 0)
 			{
 				buff[count] = '\0';
 				sum += count;
 				message += std::string(buff);
 			}
 			delete [] buff;
+			close(res);
+			remove(request.rp_name.c_str());
 			//if php add 
 			if (extension == ".php")
 			{
@@ -466,12 +415,27 @@ bool gotCGI(ClientRequest &request, std::string &file_name, std::string &respons
 					sum -= pos + 4;
 				}
 			}
-			std::string header = std::string("HTTP/1.1 200 OK\r\n")  + "Content-Length: "+ std::to_string(sum)+"\r\n"+"Server: "+request.server.server_name+"\r\n"+"Connection: "+request.requestFields["Connection"]+"\r\n";
+			std::string status = "HTTP/1.1 200 OK\r\n";
+			size_t p = message.find("\r\n\r\n");
+			if (p != std::string::npos)
+			{
+				std::string header = message.substr(0, p);
+				std::vector<std::string> lines = split(header, '\n');
+				for (std::vector<std::string>::iterator it = lines.begin(); it != lines.end(); it++)
+				{
+					std::string line = *it;
+					if (line.find("Status:") != std::string::npos)
+					{
+						std::vector<std::string> status_line = split(line, ' ');
+						status = "HTTP/1.1 " + status_line[1] + status_line[2] + "\r\n";
+					}
+				}
+			}
+			std::string header = status  + "Content-Length: "+ std::to_string(sum)+"\r\n"+"Server: "+request.server.server_name+"\r\n"+"Connection: "+request.requestFields["Connection"]+"\r\n";
 			if (extension == ".py")
 				header += "Content-Type: text/html\r\n\r\n";
+			//split
 			response = header + message;
-			// std::cerr << "DBG : [[[" << std::endl << response << "]]]";
-			close(fd[0]);
 		}
 	}
 	else
