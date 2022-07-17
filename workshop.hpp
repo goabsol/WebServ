@@ -8,8 +8,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <stdio.h>
 #include "mimetypes.hpp"
-#define FILE true
+//#define FILE true
 #define DIRECTORY false
 #define ON true
 #define OFF false
@@ -17,12 +18,12 @@
 
 
 std::string craftResponse(ClientRequest &request, int status_code = 200, std::string message = "OK");
-
+std::string getFileExtension(std::string const &file_name);
 bool getRequestedResource(std::string &resource, std::fstream &file);
 bool getResourceType(std::string &path);
 bool indexInDir(std::vector<std::string> &indexes, std::string &dir, std::string &found);
 bool getAutoIndex(Location_T &location);
-bool gotCGI(Location_T &location, std::string &tail, std::string &method);
+bool gotCGI(ClientRequest &request, std::string &file_name, std::string &response);
 std::string makeautoindex(std::string &root, std::string &dir);
 
 

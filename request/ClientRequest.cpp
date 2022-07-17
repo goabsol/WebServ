@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ClientRequest.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/14 20:57:02 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/16 22:59:07 by ael-bagh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,15 +35,17 @@ ClientRequest::ClientRequest(const ClientRequest &src)
 	*this = src;
 }
 
-ClientRequest::ClientRequest(int socket, Server_T &server) : Socket(socket), data(""),
+ClientRequest::ClientRequest(int socket, Server_T &server, long addr, long port) : Socket(socket), data(""),
       requestPosition(0), hasError(false), isDone(false), closeConnection(false),
       server(server), current_location(Location_T()), size(0), size_set(false),
 	  expect_newline(false), rq_size(0), rp_size(0), content_len(0), body_present(false),
-	  bytes_read(0), file_name(""), next_is_zero(false), cursor(0), size_body(0)
+	  bytes_read(0), file_name(""), next_is_zero(false), cursor(0), size_body(0), client_host(addr), client_port(port)
 
 {
 	this->rq_name = std::string("tmp_files/") + "rq_tmp_" + std::to_string(socket) + ".txt";
 	this->rp_name = std::string("tmp_files/") + "rp_tmp_" + std::to_string(socket) + ".txt";
+	std::cout << "addr : " << addr << std::endl;
+	std::cout << "port : " << port << std::endl;
 }
 
 /*
@@ -93,6 +95,9 @@ ClientRequest &ClientRequest::operator=(ClientRequest const &rhs)
 		this->next_is_zero = rhs.next_is_zero;
 		this->file_name = rhs.file_name;
 		this->size_body = rhs.size_body;
+		this->client_host = rhs.client_host;
+		this->client_port = rhs.client_port;
+
 	}
 	return *this;
 }
@@ -225,7 +230,21 @@ void ClientRequest::parseRequest()
 			throw http_error_exception(414, "Request-URI Too Long");
 			return;
 		}
-		else if (!locationExists(requestline[1]))
+		if (countChr(requestline[1], '?') > 1)
+		{
+			throw http_error_exception(400, "Bad Request?");
+			return;
+		}
+		else
+		{
+			std::vector<std::string> queryQuestionMark = split(requestline[1], '?');
+			if (queryQuestionMark.size() == 2)
+			{
+				requestline[1] = queryQuestionMark[0];
+				queryString = queryQuestionMark[1];
+			}
+		}
+		if (!locationExists(requestline[1]))
 		{
 			/* ERROR 404 */
 
@@ -282,12 +301,14 @@ void ClientRequest::parseRequest()
 		}
 		if (line.find(": ") != std::string::npos)
 		{
-			char *l = strdup(line.c_str());
-			std::string p(strtok(l, ": "));
-			std::string v(strtok(NULL, ": "));
+			
+			std::string p;
+			std::string v;
+			p = line.substr(0, line.find(':'));
+			v = line.substr(line.find(":") + 1);
 			// CHECK V WITH P
-
 			requestFields[p] = v;
+			
 		}
 		else
 		{
@@ -425,17 +446,21 @@ void ClientRequest::storeRequest()
 	}
 	char *buffer = new char[1024];
 	memeset(buffer, 0, 1024);
-	size_t bytes_read = 0;
+	long bytes_read = 0;
 	std::vector<std::string> lines;
 	bytes_read = recv(this->Socket, buffer, 1024, 0);
+	std::cout << "bytes read" << bytes_read << std::endl;
 	this->new_data = true;
+	std::cout << "Hi?" << std::endl;
 	if (bytes_read > 0)
 	{
 		this->data += std::string(buffer, buffer + bytes_read);
+		std::cerr << "DAAAATAAAA : " << this->data << std::endl;
 		if (this->requestPosition == 0)
 		{
 			trimwspace(this->data);
 		}
+		std::cout << "Data : |" << this->data << "|" << std::endl;
 	}
 	else if (bytes_read == 0)
 	{

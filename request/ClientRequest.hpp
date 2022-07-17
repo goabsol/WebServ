@@ -13,8 +13,8 @@ class ClientRequest
 	public:
 
 		ClientRequest();
-		ClientRequest( ClientRequest const & src );
-		ClientRequest (int, Server_T &);
+		ClientRequest(ClientRequest const & src);
+		ClientRequest (int, Server_T &, long addr, long port);
 		~ClientRequest();
 		bool getHasError();
 		bool getIsDone();
@@ -61,12 +61,15 @@ class ClientRequest
 		bool expect_newline;
 		bool new_data;
 		size_t content_len;
+		std::string queryString;
 		bool body_present;
 		std::string file_name;
 		long		bytes_read;
 		bool next_is_zero;
 		std::streamsize cursor;
 		size_t size_body;
+		long	client_port;
+		long	client_host;
 };
 
 std::ostream &			operator<<( std::ostream & o, ClientRequest const & i );

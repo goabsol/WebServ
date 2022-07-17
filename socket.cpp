@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/09 07:34:47 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/14 21:01:12 by arhallab         ###   ########.fr       */
+/*   Updated: 2022/07/16 16:50:17 by ael-bagh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,7 @@ int sockinit(parser_T parser)
 	std::map<SOCKET, Server_T> m_socket_to_server;
 	std::map<SOCKET, std::string> m_socket_to_response;
 	// create socket for each port
+	std::map<int, std::pair<long, long> > m_socket_to_addr;
 	for (size_t i = 0; i < parser.servers.size(); i++)
 	{
 		for (size_t j = 0; j < parser.servers[i].ports.size(); j++)
@@ -52,6 +53,8 @@ int sockinit(parser_T parser)
 			// std::cout << parser.servers[i].ports[j].second << " " << parser.servers[i].ports[j].first << std::endl;
 			johnny.sin_addr.s_addr = inet_addr(parser.servers[i].ports[j].first.c_str());
 			johnny.sin_port = htons(parser.servers[i].ports[j].second);
+			m_socket_to_addr[server_fd] = std::make_pair(inet_addr(parser.servers[i].ports[j].first.c_str()), parser.servers[i].ports[j].second);
+			
 			// bind socket to port
 			if (bind(server_fd, (struct sockaddr *)&johnny, sizeof(johnny)) < 0)
 			{
@@ -129,7 +132,7 @@ int sockinit(parser_T parser)
 						max_fd = client_fd;
 					m_socket_to_server[client_fd] = m_socket_to_server[i];
 					// std::cout << i << " " << client_fd << std::endl;
-					clients[client_fd] = ClientRequest(client_fd, m_socket_to_server[i]);
+					clients[client_fd] = ClientRequest(client_fd, m_socket_to_server[i], m_socket_to_addr[i].first, m_socket_to_addr[i].second);
 					std::cout << "accept socket " << client_fd << std::endl;
 					break;
 				}
@@ -154,12 +157,14 @@ int sockinit(parser_T parser)
 							clts_ongoing_requests.erase(i); // not really conviced about the timeout reseting every time a request is appended instead of only when the request is done. -to discuss later
 							gettimeofday(&(clients[i].start_time), NULL);
 							clts_ongoing_requests[i] = clients[i];
-							std::cout << "Reading from socket " << i << std::endl;
 							// std::cout << "Start time: " << clients[i].start_time.tv_sec << "," << clients[i].start_time.tv_usec << std::endl;
 							// }
+							std::cout << "Reading from socket " << i << std::endl;
 							clients[i].storeRequest();
 							if (clients[i].getIsDone())
+							{
 								m_socket_to_response[i] = craftResponse(clients[i]);
+							}
 						}
 						catch (http_error_exception &e)
 						{

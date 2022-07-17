@@ -172,3 +172,15 @@ void hexaToAscii(std::string &str)
 		}
 	}
 }
+
+
+long ipv4_to_long(std::string &value)
+{
+	long result = 0;
+	std::vector<std::string> tokens = split(value, '.');
+	for (size_t i = 0; i < tokens.size(); i++)
+	{
+		result += std::stol(tokens[i]) * pow(256, 3 - i);
+	}
+	return result;
+}
