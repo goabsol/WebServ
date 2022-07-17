@@ -6,7 +6,7 @@
 /*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/16 22:59:07 by ael-bagh         ###   ########.fr       */
+/*   Updated: 2022/07/16 23:33:50 by ael-bagh         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -305,7 +305,7 @@ void ClientRequest::parseRequest()
 			std::string p;
 			std::string v;
 			p = line.substr(0, line.find(':'));
-			v = line.substr(line.find(":") + 1);
+			v = line.substr(line.find(":") + 2);
 			// CHECK V WITH P
 			requestFields[p] = v;
 			
