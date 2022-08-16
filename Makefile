@@ -6,7 +6,7 @@
 #    By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/06/10 05:37:53 by arhallab          #+#    #+#              #
-#    Updated: 2022/07/02 23:31:49 by arhallab         ###   ########.fr        #
+#    Updated: 2022/07/17 22:19:47 by arhallab         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,9 +17,9 @@ SRC  = token.cpp lexer.cpp location_parser.cpp parser.cpp webserv.cpp conf_file.
 
 OBJ  = $(SRC:%.cpp=%.o)
 
-HDR  = $(SRC:%.cpp=%.hpp)
+HDR  = $(SRC:%.cpp=%.hpp) mimetypes.hpp
 
-FLG  = -fsanitize=address -g3 -std=c++98
+FLG  = -std=c++98 -Wall -Werror -Wextra
 
 all : $(NAME)
 

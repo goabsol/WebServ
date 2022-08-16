@@ -10,7 +10,6 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <errno.h>
 #include <vector>
 #include <map>
 #include <fstream>

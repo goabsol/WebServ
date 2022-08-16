@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   socket.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
+/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/09 07:34:47 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/16 16:50:17 by ael-bagh         ###   ########.fr       */
+/*   Updated: 2022/07/17 23:09:39 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,10 +31,16 @@ int sockinit(parser_T parser)
 	FD_ZERO(&read_fd);
 	std::map<SOCKET, Server_T> m_socket_to_server;
 	std::map<SOCKET, std::string> m_socket_to_response;
+	std::vector<std::string> used_server_names;
 	// create socket for each port
 	std::map<int, std::pair<long, long> > m_socket_to_addr;
 	for (size_t i = 0; i < parser.servers.size(); i++)
 	{
+		if (std::find(used_server_names.begin(), used_server_names.end(), parser.servers[i].server_name) != used_server_names.end())
+		{
+			std::cout << "Error: server name " << parser.servers[i].server_name << " already used" << std::endl;
+			continue;
+		}
 		for (size_t j = 0; j < parser.servers[i].ports.size(); j++)
 		{
 			server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -58,12 +64,12 @@ int sockinit(parser_T parser)
 			// bind socket to port
 			if (bind(server_fd, (struct sockaddr *)&johnny, sizeof(johnny)) < 0)
 			{
-				std::cerr << strerror(errno) << std::endl;
 				std::cerr << "Error binding socket" << std::endl;
 				return 1;
 			}
+			
 			// listen for connections
-			if (listen(server_fd, 5) < 0)
+			if (listen(server_fd, 50) < 0)
 			{
 				std::cerr << "Error listening on socket" << std::endl;
 				return 1;
@@ -75,6 +81,8 @@ int sockinit(parser_T parser)
 			// store (socket, server) in map
 			m_socket_to_server[server_fd] = parser.servers[i];
 		}
+		std::cout << "server : " << parser.servers[i].server_name << " initialized" << std::endl;
+		used_server_names.push_back(parser.servers[i].server_name);
 	}
 	// safekeeping server sockets in master
 	fd_set master = read_fd;
@@ -100,7 +108,7 @@ int sockinit(parser_T parser)
 		}
 		else if (select_return == 0)
 		{
-			std::cout << "Connection closedddd" << std::endl;
+			std::cout << "Connection closed" << std::endl;
 			FD_CLR(socket_to_close, &read_fd);
 			FD_CLR(socket_to_close, &write_fd);
 			close(socket_to_close);
@@ -142,7 +150,6 @@ int sockinit(parser_T parser)
 					// if (clients.find(i) == clients.end())
 					// {
 					// 	clients[i] = ClientRequest(i);
-						std::cout << i  << " fxfcv " << clients[i].getSocket() << std::endl;
 					// }
 					// else
 					// {
@@ -159,7 +166,6 @@ int sockinit(parser_T parser)
 							clts_ongoing_requests[i] = clients[i];
 							// std::cout << "Start time: " << clients[i].start_time.tv_sec << "," << clients[i].start_time.tv_usec << std::endl;
 							// }
-							std::cout << "Reading from socket " << i << std::endl;
 							clients[i].storeRequest();
 							if (clients[i].getIsDone())
 							{
@@ -184,7 +190,7 @@ int sockinit(parser_T parser)
 					}
 					else if (clients[i].getIsDone())
 					{
-						std::cout << "Data: " << i << " " << clients[i].getData() << " " << clients.size() << std::endl;
+						// std::cout << "Data: " << i << " " << clients[i].getData() << " " << clients.size() << std::endl;
 						clts_ongoing_requests.erase(i);
 						FD_CLR(i, &read_fd);
 						FD_SET(i, &write_fd);
@@ -194,26 +200,87 @@ int sockinit(parser_T parser)
 			}
 			else if (FD_ISSET(i, &wcopy)) // if socket is ready to write, send response
 			{
-				// std::cout << "Writing to socket " << i << std::endl;
 				std::string hello = "";
 				int sent_bytes = 0;
 				if (clients[i].body_present == false)
 				{
-					hello = m_socket_to_response[i];
-					std::cout << "response size " << hello.size() << std::endl;
-					sent_bytes = send(i, hello.c_str(), hello.size(), 0);
-					if (sent_bytes < hello.size())
+					if (clients[i].cgied)
 					{
+						if (waitpid(clients[i].cgi_pid, NULL, WNOHANG) == 0)
+							continue;
+						char *buff = new char[1025];
+						std::string message = "";
+						int count;	
+						int sum = 0;
+						int res = clients[i].cgi_fd;
+						lseek(res, 0, SEEK_SET);
+						while ((count = read(res, buff, 1024)) > 0)
+						{
+							buff[count] = '\0';
+							sum += count;
+							message += std::string(buff);
+						}
+						delete [] buff;
+						close(res);
+						remove(clients[i].rp_name.c_str());
+						//if php add 
+						std::string extension = getFileExtension(clients[i].file_name);
+						size_t pos = message.find("\r\n\r\n");
+						if (pos != std::string::npos)
+						{
+							sum -= pos + 4;
+						}
+						std::string status = "HTTP/1.1 200 OK\r\n";
+						size_t p = message.find("\r\n\r\n");
+						if (p != std::string::npos)
+						{
+							std::string header = message.substr(0, p);
+							std::vector<std::string> lines = split(header, '\n');
+							for (std::vector<std::string>::iterator it = lines.begin(); it != lines.end(); it++)
+							{
+								std::string line = *it;
+								if (line.find("Status:") != std::string::npos)
+								{
+									std::vector<std::string> status_line = split(line, ' ');
+									status = "HTTP/1.1 " + status_line[1] + status_line[2] + "\r\n";
+								}
+							}
+						}
+						std::string header = status  + "Content-Length: "+ std::to_string(sum)+"\r\n"+"Server: "+clients[i].server.server_name+"\r\n"+"Connection: "+clients[i].requestFields["Connection"]+"\r\n";
+						//split
+						hello = header + message;
+						clients[i].cgied = false;
+					}
+					else
+					{
+						hello = m_socket_to_response[i];
+					}
+					sent_bytes = send(i, hello.c_str(), hello.size(), 0);
+					if (sent_bytes < (int)hello.size())
+					{
+						std::cout << "Error sending data" << std::endl;
 						m_socket_to_response[i] = hello.substr(sent_bytes);
 					}
 					else
 					{
-						std::cout << "delete socket from write " << i << std::endl;
-						FD_CLR(i, &write_fd);
-						FD_SET(i, &read_fd);
 						std::remove(clients[i].rq_name.c_str());
+						FD_CLR(i, &write_fd);
+						if (clients[i].requestFields["Connection"] == "close")
+						{
+							close(i);
+							clients.erase(i);
+						}
+						else
+						{
+							FD_SET(i, &read_fd);
+							clients[i].setIsDone(false);
+							clients[i].body_present = false; 
+						}
 					}
-					clients[i].setIsDone(false);
+					if (clients.find(i) != clients.end())
+					{
+						clients[i].setIsDone(false);
+					}
 				}
 				else
 				{
@@ -222,7 +289,7 @@ int sockinit(parser_T parser)
 					std::fstream file(clients[i].file_name, std::ios::in | std::ios::binary);
 					if (!file.is_open())
 						std::cout << "*****error sending buff" << std::endl;
-					if (clients[i].cursor < m_socket_to_response[i].size())
+					if ((size_t)clients[i].cursor < m_socket_to_response[i].size())
 					{
 						bytes_read =  std::min(m_socket_to_response[i].size() - clients[i].cursor, (size_t)2048);
 						memcpy(buffer, m_socket_to_response[i].c_str() + clients[i].cursor, bytes_read);
@@ -243,19 +310,25 @@ int sockinit(parser_T parser)
 					{
 						FD_CLR(i, &write_fd);
 						close(i);
-						std::cout << "error sending buff " << clients[i].cursor << " " << m_socket_to_response[i].size() + clients[i].size_body << " " << i << std::endl;
 						clients.erase(i);
 					}
 					else
 					{
 						clients[i].cursor += sent_bytes;
-						if (clients[i].cursor == m_socket_to_response[i].size() + clients[i].size_body)
+						if ((size_t)clients[i].cursor == m_socket_to_response[i].size() + clients[i].size_body)
 						{
-							std::cout << "delete socket from write " << i << std::endl;
 							FD_CLR(i, &write_fd);
-							FD_SET(i, &read_fd);
-							clients[i].setIsDone(false);
-							clients[i].body_present = false; 
+							if (clients[i].requestFields["Connection"] == "close")
+							{
+								close(i);
+								clients.erase(i);
+							}
+							else
+							{
+								FD_SET(i, &read_fd);
+								clients[i].setIsDone(false);
+								clients[i].body_present = false; 
+							}
 						}
 					}
 					// delete[] buffer;

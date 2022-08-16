@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   workshop.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
+/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/07/04 01:31:07 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/16 23:02:56 by ael-bagh         ###   ########.fr       */
+/*   Updated: 2022/07/17 23:09:51 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 std::string makeautoindex(std::string &root, std::string &dir)
 {
+	(void)root;
 	std::string autoindex_page = "<!DOCTYPE html>\
 <html lang=\"en\">\
 <head>\
@@ -21,19 +22,28 @@ std::string makeautoindex(std::string &root, std::string &dir)
 	<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\
 	<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\
 	<title>AutoIndex</title>\
+	<script src=\"https://kit.fontawesome.com/c88d0d8eda.js\" crossorigin=\"anonymous\"></script>\
+	  <script src=\"https://cdn.tailwindcss.com\"></script>\
 </head>\
-<body>";
+<body>\
+<div class =\"flex flex-col mt-20 mb-4 overflow-auto border-2 bg-black-300 rounded-md divide-y-2 divide-dashed divide-black-400\">";
 	DIR *direc;
 	struct dirent *ent;
 	if ((direc = opendir(dir.c_str())) != NULL)
 	{
 		while ((ent = readdir(direc)) != NULL)
 		{
-			autoindex_page += "<a href=\""  + std::string(ent->d_name) + "\">" + ent->d_name + "</a><br>";
+			std::string file_name = ent->d_name;
+			std::string icon = "";
+			if (getResourceType(file_name) == false)
+				icon =  "<i class=\"cursor-pointer text-xs m-2 p-2 bg-red-500 border-2 rounded-full fa-solid fa-folder\"></i> ";
+			else if (getResourceType(file_name) == true )
+				icon =  "<i class=\"cursor-pointer text-xs m-2 p-2 bg-blue-500 border-2 rounded-full fa-solid fa-file\"></i> ";
+			autoindex_page += "<a class=\"cursor-pointer text-base border\" href=\""  + std::string(ent->d_name) + "\">"+ icon + ent->d_name + "</a>";
 		}
 		closedir(direc);
 	}
-	autoindex_page += "</body>	</html>";
+	autoindex_page += "</div></body>	</html>";
 	return autoindex_page;
 }
 
@@ -87,12 +97,12 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 	if (request.method == "GET")
 	{
 		get:
-		if (getRequestedResource(request.file_name, file))
+		if (getRequestedResource(request.file_name))
 		{
 			if (getResourceType(request.file_name) == true)
 			{
 				RF["Content-Type"] = getFileType(request.file_name);
-				if(gotCGI(request, request.file_name, response))
+				if(gotCGI(request, request.file_name))
 					return (response);
 			}
 			else
@@ -129,27 +139,67 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 	{
 		if (request.current_location.upload_store_set)
 		{
-			// upload
+			std::vector<std::string> dirs = split(request.requestURI, '/');
+			std::string dir = request.current_location.upload_store;
+			for (std::vector<std::string>::iterator it = dirs.begin(); it != dirs.end() - 1; it++)
+			{
+				std::string i = *it;
+				dir += i + "/";
+				if (dir.size() > 0)
+				{
+					if (access(dir.c_str(), F_OK) != 0)
+						mkdir(dir.c_str(), 0777);
+				}
+			}
+			request.file_name = request.current_location.upload_store + request.requestURI;
+			std::ifstream  src(request.rq_name, std::ios::binary);
+			std::ofstream  dst(request.file_name,   std::ios::binary);
+
+			dst << src.rdbuf();
+			
+			src.close();
+			dst.close();
+			status_code = 201;
+			message = "Created";
+			request.body_present = false;
+			response = "HTTP/1.1 " + std::to_string(status_code) + " " + message + "\r\n";
+			response += "Server: " + request.getServer().server_name + "\r\n";
+			response += "Content-Type: text/html\r\n";
+			response += "Content-Length: 0\r\n";
+			response += "Location: " + request.requestFields["Host"] + request.requestURI + "\r\n\r\n";
+			return(response);
+			
 		}
 		else
 			goto get;
 	}
 	else if (request.method == "DELETE")
 	{
-		if (getRequestedResource(request.file_name, file))
+		if (getRequestedResource(request.file_name))
 		{
 			if (getResourceType(request.file_name) == true)
 			{
 				RF["Content-Type"] = getFileType(request.file_name);
-				if (!gotCGI(request, RF["Content-Type"], request.method))
-					return (craftResponse(request, 204, "No Content"));
+				if (!gotCGI(request, request.file_name))
+				{
+					remove(request.file_name.c_str());
+				C204:
+					status_code = 204;
+					message = "No Content";
+					response = "HTTP/1.1 " + std::to_string(status_code) + " " + message + "\r\n";
+					response += "Server: " + request.getServer().server_name + "\r\n";
+					response += "Content-Type: text/html\r\n";
+					response += "Content-Length: 0\r\n";
+					response += "Location: " + request.requestFields["Host"] + request.requestURI + "\r\n\r\n";
+					return(response);
+				}
 			}
 			else
 			{
 				if (*(request.requestURI.end() - 1) != '/')
 					return (craftResponse(request, 409, "Conflict"));
 				std::string content_type = "text/html";
-				if (gotCGI(request, content_type, request.method))
+				if (gotCGI(request, request.file_name))
 				{
 					std::string index;
 					if (indexInDir(request.current_location.index, request.requestURI, index))
@@ -160,7 +210,7 @@ std::string craftResponse(ClientRequest &request, int status_code, std::string m
 				else
 				{
 					if (emptyDir(request.file_name))
-						return (craftResponse(request, 204, "No Content"));
+						goto C204;
 					else
 					{
 						if (access(request.file_name.c_str(), W_OK))
@@ -191,7 +241,7 @@ end:
 	}
 	
 send:
-	if (RF.find("Content-Type") == RF.end())
+	if (RF.find("Content-Type") == RF.end() || status_code > 399)
 	{
 		response += "Content-Type: text/html\r\n";
 	}
@@ -223,6 +273,7 @@ send:
 			// std::cout << buffer << std::endl;
 			request.body_present = false;
 			request.size_body = size_f;
+			delete [] buffer;
 		}
 		else
 		{
@@ -243,7 +294,7 @@ send:
 	return response;
 }
 
-bool getRequestedResource(std::string &resource, std::fstream &file)
+bool getRequestedResource(std::string &resource)
 {
 	std::fstream fs;
 	fs.open(resource, std::fstream::in);
@@ -278,7 +329,7 @@ bool indexInDir(std::vector<std::string> &indexes, std::string &dir, std::string
 	{
 		std::fstream file;
 		std::string file_name = dir + *it;
-		if (getRequestedResource(file_name, file))
+		if (getRequestedResource(file_name))
 		{
 			found = *it;
 			return true;
@@ -288,7 +339,24 @@ bool indexInDir(std::vector<std::string> &indexes, std::string &dir, std::string
 	return false;
 }
 
-bool gotCGI(ClientRequest &request, std::string &file_name, std::string &response)
+std::string http_toupp(std::string &str)
+{
+	std::string response = "HTTP_";
+
+	// turn lowercase to uppercase and - to _ and add it to response
+	for (size_t i = 0; i < str.length(); i++)
+	{
+		if (str[i] >= 'a' && str[i] <= 'z')
+			response += str[i] - 32;
+		else if (str[i] == '-')
+			response += '_';
+		else
+			response += str[i];
+	}
+	return response;
+}
+
+bool gotCGI(ClientRequest &request, std::string &file_name)
 {
 	// CGI that shit (plz )
 	//set headers
@@ -302,76 +370,12 @@ bool gotCGI(ClientRequest &request, std::string &file_name, std::string &respons
 		args[0] = strdup(cgi[extension].c_str());
 		args[1] = strdup(path.c_str());
 		args[2] = NULL;
-		//set environement variables
-		// char**env = new char*[11];
-		// env[0] = strdup(std::string("QUERY_STRING="+request.queryString).c_str());
-		// env[1] = strdup("SERVER_PROTOCOL=HTTP/1.1");
-		// env[2] = strdup(std::string("PATH_INFO="+file_name).c_str());
-		// env[3] = strdup(std::string("DOCUMENT_ROOT="+request.current_location.root).c_str());
-		// env[4] = strdup(std::string("PORT="+std::to_string(request.client_port)).c_str());
-		// env[5] = strdup(std::string("HTTP_CONTENT_LENGTH="+request.requestFields["Content-Length"]).c_str());
-		// env[6] = strdup(std::string("HTTP_CONTENT_TYPE="+request.requestFields["Content-Type"]).c_str());
-		// env[7] = strdup(std::string("SCRIPT_NAME="+request.current_location_path).c_str());
-		// env[8] = strdup(std::string("SCRIPT_FILENAME="+request.requestURI).c_str());
-		// env[9] = strdup(std::string("HTTP_HOST=localhost").c_str());
-		// env[1] = strdup((std::string("CONTENT_LENGTH=")+request.requestFields["Content-Length"]).c_str());
-		// env[2] = strdup((std::string("CONTENT_TYPE=")+request.requestFields["Content-Type"]).c_str());
-		// env[3] = strdup((std::string("GATEWAY_INTERFACE=")+"CGI/1.1").c_str());
-		// env[4] = strdup((std::string("PATH_INFO=")+request.requestURI).c_str());
-		// env[5] = strdup((std::string("PATH_TRANSLATED=")+request.requestURI).c_str());
-		// env[6] = strdup((std::string("REMOTE_ADDR=")+ "localhost").c_str());
-		// env[7] = strdup((std::string("REMOTE_HOST=")+ "localhost").c_str());
-		// env[8] = strdup((std::string("SCRIPT_NAME=") + file_name).c_str());
-		// env[9] = strdup((std::string("REQUEST_METHOD=") + ))
-		// env[10] = NULL;
-		// setenv("GATEWAY_INTERFACE", "CGI/1.1", 1);
-		// setenv("QUERY_STRING", request.queryString.c_str(), 1);
-		// setenv("CONTENT_LENGTH", request.requestFields["Content-Length"].c_str(), 1);
-		// setenv("CONTENT_TYPE", request.requestFields["Content-Type"].c_str(), 1);
-		// setenv("PATH_INFO", request.requestURI.c_str(), 1);
-		// setenv("PATH_TRANSLATED", request.requestURI.c_str(), 1);
-		// setenv("REMOTE_ADDR", "localhost", 1);
-		// setenv("REMOTE_HOST", "localhost", 1);
-		// setenv("SCRIPT_NAME", "", 1);
-		// setenv("SCRIPT_FILENAME", file_name.c_str(), 1);
-		// setenv("REQUEST_METHOD", request.method.c_str(), 1);
-		// setenv("SERVER_PROTOCOL", "HTTP/1.1", 1);
-		// setenv("SERVER_SOFTWARE", "WEBSERV/1.1", 1);
-		// setenv("SERVER_NAME", request.server.server_name.c_str(), 1);
-		// setenv("SERVER_PORT", std::to_string(request.client_port).c_str(), 1);
-		// setenv("REDIRECT_STATUS", "200", 1);
-		// std::cout << "ENV[6] : " << env[++dd] << std::endl;
-		// std::cout << "ENV[6] : " << env[++dd] << std::endl;
-		// std::cout << "ENV[6] : " << env[++dd] << std::endl;
-		// std::cout << "ENV[6] : " << env[++dd] << std::endl;
-		// std::cout << "ENV[6] : " << env[++dd] << std::endl;
-		// std::cout << "ENV[6] : " << env[++dd] << std::endl;
-		////////////////////////////////////////////////////////////////////////////////////////
-		int fd[2];
-		if (pipe(fd) < 0)
-			throw("pipeError");
+		int res = open(request.rp_name.c_str(), O_RDWR | O_CREAT);
+		request.cgi_fd = res;
+		request.cgied = true;
 		pid_t pid = fork();
 		if (pid == 0)
 		{
-			// setenv("GATEWAY_INTERFACE", "CGI/1.1", 1);
-			// setenv("QUERY_STRING", request.queryString.c_str(), 1);
-			// if (request.requestFields.find("Content-Length") != request.requestFields.end())
-			// 	setenv("CONTENT_LENGTH", request.requestFields["Content-Length"].c_str(), 1);
-			// if (request.requestFields.find("Content-Type") != request.requestFields.end())
-			// 	setenv("CONTENT_TYPE", request.requestFields["Content-Type"].c_str(), 1);
-			// std::cerr <<"******>"<<  request.requestFields["Content-Length"].c_str() << std::endl;
-			// setenv("PATH_INFO", request.requestURI.c_str(), 1);
-			// setenv("PATH_TRANSLATED", request.requestURI.c_str(), 1);
-			// setenv("SCRIPT_NAME", "", 1);
-			// setenv("SCRIPT_FILENAME", file_name.c_str(), 1);
-			// // setenv("REMOTE_ADDR", "localhost", 1);
-			// // setenv("REMOTE_HOST", "localhost", 1);
-			// setenv("REQUEST_METHOD", request.method.c_str(), 1);
-			// // setenv("SERVER_PROTOCOL", "HTTP/1.1", 1);
-			// // setenv("SERVER_SOFTWARE", "WEBSERV/1.1", 1);
-			// // setenv("SERVER_NAME", request.server.server_name.c_str(), 1);
-			// // setenv("SERVER_PORT", std::to_string(request.client_port).c_str(), 1);
-			// setenv("REDIRECT_STATUS", "200", 1);
 			std::vector<char *> env;
 			env.push_back(strdup("GATEWAY_INTERFACE=CGI/1.1"));
 			env.push_back(strdup(("QUERY_STRING=" + request.queryString).c_str()));
@@ -388,58 +392,72 @@ bool gotCGI(ClientRequest &request, std::string &file_name, std::string &respons
 			env.push_back(strdup(("SERVER_PROTOCOL=HTTP/1.1")));
 			env.push_back(strdup(("SERVER_SOFTWARE=WEBSERV/1.1")));
 			env.push_back(strdup(("SERVER_NAME=" + request.server.server_name).c_str()));
+			env.push_back(strdup(("PATH=" + std::string(getenv("PATH"))).c_str()));
 			env.push_back(strdup(("SERVER_PORT=" + std::to_string(request.client_port)).c_str()));
-			
+			for (std::map<std::string, std::string>::iterator it = request.requestFields.begin(); it != request.requestFields.end(); it++)
+			{
+				std::string key = it->first;
+				std::string value = it->second;
+				env.push_back(strdup((http_toupp(key)+ "=" + value).c_str()));
+			}
 			env.push_back(NULL);
-			// if (request.method == "POST")
-			// {
-				std::cerr <<"*******>>>" <<request.rq_name.c_str() << std::endl;
-				int body = open(request.rq_name.c_str(), O_RDONLY);
-				std::cout << "CHECK_FD : " << body << std::endl;
- 				dup2(body, 0);
-				close(body);
-
-			// 	// std::cout << "|||||||||||||"<< buff << "|||||||||||||"<< std::endl;
-			// }
-			close(fd[0]);
-			if (dup2(fd[1], 1) == - 1)
+			int body = open(request.rq_name.c_str(), O_RDONLY);
+			dup2(body, 0);
+			close(body);
+			if (dup2(res, 1) == - 1)
 				std::cerr << "duperror" << std::endl;
-			close(fd[1]);
+			close(res);
 			execve(cgi[extension].c_str(),args, env.data());
 			exit(1);
 		}
 		else
 		{
-			std::cerr << "hello" << std::endl;
-			waitpid(pid, NULL, 0);
-			std::cerr<< "hello" << std::endl;
-			char *buff = new char[1025];
-			std::string message = "";
-			int count;
-			close(fd[1]);
-			int sum = 0;
-			while ((count = read(fd[0], buff, 1024)) > 0)
-			{
-				buff[count] = '\0';
-				sum += count;
-				message += std::string(buff);
-			}
-			delete [] buff;
-			//if php add 
-			if (extension == ".php")
-			{
-				size_t pos = message.find("\r\n\r\n");
-				if (pos != std::string::npos)
-				{
-					sum -= pos + 4;
-				}
-			}
-			std::string header = std::string("HTTP/1.1 200 OK\r\n")  + "Content-Length: "+ std::to_string(sum)+"\r\n"+"Server: "+request.server.server_name+"\r\n"+"Connection: "+request.requestFields["Connection"]+"\r\n";
-			if (extension == ".py")
-				header += "Content-Type: text/html\r\n\r\n";
-			response = header + message;
-			// std::cerr << "DBG : [[[" << std::endl << response << "]]]";
-			close(fd[0]);
+			request.cgi_pid = pid;
+			// waitpid(pid, NULL, 0);
+			// char *buff = new char[1025];
+			// std::string message = "";
+			// int count;	
+			// int sum = 0;
+			// lseek(res, 0, SEEK_SET);
+			// while ((count = read(res, buff, 1024)) > 0)
+			// {
+			// 	buff[count] = '\0';
+			// 	sum += count;
+			// 	message += std::string(buff);
+			// }
+			// delete [] buff;
+			// close(res);
+			// remove(request.rp_name.c_str());
+			// //if php add 
+			// if (extension == ".php")
+			// {
+			// 	size_t pos = message.find("\r\n\r\n");
+			// 	if (pos != std::string::npos)
+			// 	{
+			// 		sum -= pos + 4;
+			// 	}
+			// }
+			// std::string status = "HTTP/1.1 200 OK\r\n";
+			// size_t p = message.find("\r\n\r\n");
+			// if (p != std::string::npos)
+			// {
+			// 	std::string header = message.substr(0, p);
+			// 	std::vector<std::string> lines = split(header, '\n');
+			// 	for (std::vector<std::string>::iterator it = lines.begin(); it != lines.end(); it++)
+			// 	{
+			// 		std::string line = *it;
+			// 		if (line.find("Status:") != std::string::npos)
+			// 		{
+			// 			std::vector<std::string> status_line = split(line, ' ');
+			// 			status = "HTTP/1.1 " + status_line[1] + status_line[2] + "\r\n";
+			// 		}
+			// 	}
+			// }
+			// std::string header = status  + "Content-Length: "+ std::to_string(sum)+"\r\n"+"Server: "+request.server.server_name+"\r\n"+"Connection: "+request.requestFields["Connection"]+"\r\n";
+			// if (extension == ".py")
+			// 	header += "Content-Type: text/html\r\n\r\n";
+			// //split
+			// response = header + message;
 		}
 	}
 	else

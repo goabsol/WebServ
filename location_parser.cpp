@@ -171,6 +171,7 @@ Location_T::Location_T(std::vector<token_T> &tokens, size_t &i, Server_T *server
 				{
 					print_and_exit("Error: upload_store already set", tokens[i].line);
 				}
+				this->upload_store_set = true;
 				this->upload_store = tokens[i].value;
 			}
 			else

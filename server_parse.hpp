@@ -19,8 +19,8 @@ class Server_T
 		std::vector<std::string> allowed_methods;
 		std::vector<std::string> index;
 		std::map<int, std::string> error_pages;
-		int body_size_limit;
 		std::string root;
+		int body_size_limit;
 		std::vector<std::string> cgi;
 		std::string server_name;
 		std::vector<std::pair<std::string, long> >ports;

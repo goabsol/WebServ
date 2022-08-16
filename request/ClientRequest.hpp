@@ -70,6 +70,9 @@ class ClientRequest
 		size_t size_body;
 		long	client_port;
 		long	client_host;
+		bool 	cgied;
+		pid_t	cgi_pid;
+		int 	cgi_fd;
 };
 
 std::ostream &			operator<<( std::ostream & o, ClientRequest const & i );

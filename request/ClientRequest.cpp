@@ -3,25 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   ClientRequest.cpp                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ael-bagh <ael-bagh@student.42.fr>          +#+  +:+       +#+        */
+/*   By: arhallab <arhallab@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/06/24 12:31:16 by arhallab          #+#    #+#             */
-/*   Updated: 2022/07/16 22:59:07 by ael-bagh         ###   ########.fr       */
+/*   Updated: 2022/07/17 23:10:07 by arhallab         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ClientRequest.hpp"
 
-const std::string tmp[] = {"GET",
-						   "POST",
-						   "PUT",
-						   "DELETE",
-						   "HEAD",
-						   "OPTIONS",
-						   "CONNECT",
-						   "TRACE"};
-
-const std::vector<std::string> v_methods(tmp, tmp + 8);
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
@@ -35,17 +25,15 @@ ClientRequest::ClientRequest(const ClientRequest &src)
 	*this = src;
 }
 
-ClientRequest::ClientRequest(int socket, Server_T &server, long addr, long port) : Socket(socket), data(""),
-      requestPosition(0), hasError(false), isDone(false), closeConnection(false),
-      server(server), current_location(Location_T()), size(0), size_set(false),
-	  expect_newline(false), rq_size(0), rp_size(0), content_len(0), body_present(false),
-	  bytes_read(0), file_name(""), next_is_zero(false), cursor(0), size_body(0), client_host(addr), client_port(port)
+ClientRequest::ClientRequest(int socket, Server_T &server, long addr, long port) : Socket(socket),
+		rq_size(0), rp_size(0), data(""), hasError(false), requestPosition(0), isDone(false),
+		closeConnection(false), server(server), current_location(Location_T()), size(0), size_set(false),
+		expect_newline(false), content_len(0), body_present(false), file_name(""), bytes_read(0),
+		next_is_zero(false), cursor(0), size_body(0), client_port(port), client_host(addr), cgied(false)
 
 {
 	this->rq_name = std::string("tmp_files/") + "rq_tmp_" + std::to_string(socket) + ".txt";
 	this->rp_name = std::string("tmp_files/") + "rp_tmp_" + std::to_string(socket) + ".txt";
-	std::cout << "addr : " << addr << std::endl;
-	std::cout << "port : " << port << std::endl;
 }
 
 /*
@@ -97,15 +85,17 @@ ClientRequest &ClientRequest::operator=(ClientRequest const &rhs)
 		this->size_body = rhs.size_body;
 		this->client_host = rhs.client_host;
 		this->client_port = rhs.client_port;
+		this->cgied = rhs.cgied;
+		this->cgi_pid = rhs.cgi_pid;
 
 	}
 	return *this;
 }
 
-std::ostream &operator<<(std::ostream &o, ClientRequest const &i)
-{
-	return o;
-}
+// std::ostream &operator<<(std::ostream &o, ClientRequest const &i)
+// {
+// 	return o;
+// }
 
 /*
 ** --------------------------------- METHODS ----------------------------------
@@ -159,6 +149,10 @@ void ClientRequest::setIsDone(bool isDone)
 	this->size = 0;
 	this->size_set = false;
 	this->cursor = 0;
+	if (isDone == false)
+	{
+		this->requestFields.clear();
+	}
 }
 
 void ClientRequest::clearData()
@@ -305,7 +299,7 @@ void ClientRequest::parseRequest()
 			std::string p;
 			std::string v;
 			p = line.substr(0, line.find(':'));
-			v = line.substr(line.find(":") + 1);
+			v = line.substr(line.find(":") + 2);
 			// CHECK V WITH P
 			requestFields[p] = v;
 			
@@ -449,18 +443,16 @@ void ClientRequest::storeRequest()
 	long bytes_read = 0;
 	std::vector<std::string> lines;
 	bytes_read = recv(this->Socket, buffer, 1024, 0);
-	std::cout << "bytes read" << bytes_read << std::endl;
 	this->new_data = true;
-	std::cout << "Hi?" << std::endl;
 	if (bytes_read > 0)
 	{
 		this->data += std::string(buffer, buffer + bytes_read);
-		std::cerr << "DAAAATAAAA : " << this->data << std::endl;
+		// std::cerr << "DAAAATAAAA : " << this->data << std::endl;
 		if (this->requestPosition == 0)
 		{
 			trimwspace(this->data);
 		}
-		std::cout << "Data : |" << this->data << "|" << std::endl;
+		// std::cout << "Data : |" << this->data << "|" << std::endl;
 	}
 	else if (bytes_read == 0)
 	{
@@ -474,10 +466,12 @@ void ClientRequest::storeRequest()
 
 		//
 	}
+	delete[] buffer;
 	// std::cout << this->data << std::endl;
 	while (((this->data.find("\r\n") != std::string::npos) || this->requestPosition == 2) && (this->data != "" && (this->size == 0 || this->new_data)))
 	{
 		parseRequest();
+		
 		// std::cout << "Request: " << this->data << std::endl;
 		if (this->requestPosition == 2)
 		{

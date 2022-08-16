@@ -1,4 +1,6 @@
 #!/usr/bin/python
+print("Content-Type=text/html\r")
+print("\r")
 print ("<html><head><title>Situation snapshot</title></head><body><pre>")
 
 import sys
